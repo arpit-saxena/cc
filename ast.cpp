@@ -9,7 +9,7 @@ void ast_node::raise_error(std::string err) {
   std::cerr << "Error: " << err << '\n';
 }
 
-decl_specifiers_node *decl_specifiers_node::add_storage_spec(
+/* decl_specifiers_node *decl_specifiers_node::add_storage_spec(
     storage_specifier spec) {
   if (storage != storage_specifier::UNSET) {
     raise_error("Cannot have multiple storage specifiers");
@@ -42,4 +42,4 @@ param_list_node *param_list_node::add_decl(param_decl_node *decl) {
   param_decls.push_back(dynamic_cast<param_decl_node *>(decl));
   // std::cout << param_decls.size() << '\n';
   return this;
-}
+} */

@@ -3,9 +3,10 @@
 #include <stdlib.h>
 
 #include "ast.hpp"
-#include "c.tab.hpp"
+#include "decl_common.hpp"
 
 extern "C" int yylex();
+#include "c.tab.hpp"
 int yyparse();
 extern "C" FILE *yyin;
 

@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <iostream>
 #include "ast.hpp"
+#include "decl_common.hpp"
 using namespace std;
 
 // stuff from flex that bison needs to know about:
@@ -31,12 +32,12 @@ void yyerror(const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
-%nterm <param_list_node *> parameter_list
+/* %nterm <param_list_node *> parameter_list
 %nterm <param_decl_node *> parameter_declaration
 %nterm <param_type_list_node *> parameter_type_list
-%nterm <decl_specifiers_node *> declaration_specifiers
-%nterm <storage_specifier> storage_class_specifier
-%nterm <basic_type_spec> type_specifier
+%nterm <decl_specifiers_node *> declaration_specifiers */
+%nterm <storage_specifiers::storage> storage_class_specifier
+%nterm <type_specifiers::type> type_specifier
 
 %start translation_unit
 %%
@@ -241,25 +242,25 @@ init_declarator
 	;
 
 storage_class_specifier
-	: TYPEDEF {$$ = storage_specifier::TYPEDEF;}	/* identifiers must be flagged as TYPEDEF_NAME */
-	| EXTERN {$$ = storage_specifier::EXTERN;}
-	| STATIC {$$ = storage_specifier::STATIC;}
-	| THREAD_LOCAL {$$ = storage_specifier::THREAD_LOCAL;}
-	| AUTO {$$ = storage_specifier::AUTO;}
-	| REGISTER {$$ = storage_specifier::REGISTER;}
+	: TYPEDEF {$$ = storage_specifiers::TYPEDEF;} /* identifiers must be flagged as TYPEDEF_NAME */
+	| EXTERN {$$ = storage_specifiers::EXTERN;}
+	| STATIC {$$ = storage_specifiers::STATIC;}
+	| THREAD_LOCAL {$$ = storage_specifiers::THREAD_LOCAL;}
+	| AUTO {$$ = storage_specifiers::AUTO;}
+	| REGISTER {$$ = storage_specifiers::REGISTER;}
 	;
 
 type_specifier
-	: VOID {$$ = basic_type_spec::VOID;}
-	| CHAR {$$ = basic_type_spec::CHAR;}
-	| SHORT {$$ = basic_type_spec::SHORT;}
-	| INT {$$ = basic_type_spec::INT;}
-	| LONG {$$ = basic_type_spec::LONG;}
-	| FLOAT {$$ = basic_type_spec::FLOAT;}
-	| DOUBLE {$$ = basic_type_spec::DOUBLE;}
-	| SIGNED {$$ = basic_type_spec::SIGNED;}
-	| UNSIGNED {$$ = basic_type_spec::UNSIGNED;}
-	| BOOL {$$ = basic_type_spec::BOOL;}
+	: VOID {$$ = type_specifiers::VOID;}
+	| CHAR {$$ = type_specifiers::CHAR;}
+	| SHORT {$$ = type_specifiers::SHORT;}
+	| INT {$$ = type_specifiers::INT;}
+	| LONG {$$ = type_specifiers::LONG;}
+	| FLOAT {$$ = type_specifiers::FLOAT;}
+	| DOUBLE {$$ = type_specifiers::DOUBLE;}
+	| SIGNED {$$ = type_specifiers::SIGNED;}
+	| UNSIGNED {$$ = type_specifiers::UNSIGNED;}
+	| BOOL {$$ = type_specifiers::BOOL;}
 	| COMPLEX
 	| IMAGINARY	  	/* non-mandated extension */
 	| atomic_type_specifier
@@ -388,8 +389,8 @@ parameter_type_list
 	;
 
 parameter_list
-	: parameter_declaration {$$ = new param_list_node($1);}
-	| parameter_list ',' parameter_declaration {$$ = $1->add_decl($3);}
+	: parameter_declaration //{$$ = new param_list_node($1);}
+	| parameter_list ',' parameter_declaration //{$$ = $1->add_decl($3);}
 	;
 
 parameter_declaration

@@ -2,11 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "ast.hpp"
-#include "decl_common.hpp"
+#include "c.tab.hpp"
 
 extern "C" int yylex();
-#include "c.tab.hpp"
 int yyparse();
 extern "C" FILE *yyin;
 

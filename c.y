@@ -1,8 +1,6 @@
 %{
 #include <cstdio>
 #include <iostream>
-#include "ast.hpp"
-#include "decl_common.hpp"
 using namespace std;
 
 // stuff from flex that bison needs to know about:
@@ -12,6 +10,11 @@ extern "C" FILE *yyin;
  
 void yyerror(const char *s);
 %}
+
+%code requires {
+	#include "ast.hpp"
+	#include "decl_common.hpp"
+}
 
 %define api.value.type union
 

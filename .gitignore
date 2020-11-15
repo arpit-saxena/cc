@@ -2,3 +2,4 @@ c.lex.cpp
 c.tab.cpp
 c.tab.hpp
 cc
+/examples/rolling_test.c

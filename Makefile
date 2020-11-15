@@ -1,5 +1,5 @@
-cc: cc.cpp c.tab.cpp c.lex.cpp
-	g++ c.tab.cpp c.lex.cpp cc.cpp -lm -lfl -o $@
+cc: cc.cpp c.tab.cpp c.lex.cpp ast.cpp
+	g++ c.tab.cpp c.lex.cpp cc.cpp ast.cpp -std=c++17 -lm -lfl -o $@ -g
 
 c.tab.cpp c.tab.hpp: c.y
 	bison -o c.tab.cpp -d c.y

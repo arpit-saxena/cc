@@ -4,7 +4,16 @@
 
 storage_specifiers::storage_specifiers(storage spec) { this->spec = spec; }
 
-type_specifiers::type_specifiers(type spec) { add_type_spec(spec); }
+storage_specifiers *storage_specifiers::add_spec(storage spec) {
+  if (this->spec != UNSET) {
+    raise_error("Only one storage specifier is allowed. Taking the new one!");
+  }
+
+  this->spec = spec;
+  return this;
+}
+
+type_specifiers::type_specifiers(type spec) { add_spec(spec); }
 
 type_specifiers *type_specifiers::raise_incompat_error(type spec) {
   raise_error("Incompatible type specifiers");
@@ -16,7 +25,7 @@ type_specifiers *type_specifiers::change_type(type specs) {
   return this;
 }
 
-type_specifiers *type_specifiers::add_type_spec(type spec) {
+type_specifiers *type_specifiers::add_spec(type spec) {
   bool was_inserted = types_seen.insert(spec).second;
   // FIXME maybe: Weirdish fix for LONG being able to appear twice
   if (!was_inserted && spec == LONG) {
@@ -123,4 +132,14 @@ type_specifiers *type_specifiers::add_type_spec(type spec) {
   }
 }
 
-type type_specifiers::get_specs() { return specs; }
+type_specifiers::type type_specifiers::get_specs() { return specs; }
+
+declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {
+  this->storage_spec.add_spec(spec);
+  return this;
+}
+
+declaration_specs *declaration_specs::add(type_specifiers::type spec) {
+  this->type_spec.add_spec(spec);
+  return this;
+}

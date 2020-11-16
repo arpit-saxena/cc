@@ -31,6 +31,7 @@ class storage_specifiers : public ast_node {
 
  public:
   storage_specifiers(storage spec = UNSET);
+  storage_specifiers* add_spec(storage spec);
 };
 
 /*
@@ -75,8 +76,24 @@ class type_specifiers : public ast_node {
 
  public:
   type_specifiers(type spec);
-  type_specifiers* add_type_spec(type spec);
+  type_specifiers* add_spec(type spec);
   type get_specs();
+};
+
+// TODO: Add type_qualifier, function_specifier and alignment_specifier here
+
+class pointer : public ast_node {
+  // TODO: Add impl
+};
+
+class declaration_specs : public ast_node {
+  storage_specifiers storage_spec;
+  type_specifiers type_spec;
+  // TODO: Add type qualifier, function_specifier and alignment specifier
+
+ public:
+  declaration_specs* add(storage_specifiers::storage storage_spec);
+  declaration_specs* add(type_specifiers::type type_spec);
 };
 
 #endif /* DECL_COMMON_HPP */

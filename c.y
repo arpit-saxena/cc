@@ -37,8 +37,8 @@ void yyerror(const char *s);
 
 /* %nterm <param_list_node *> parameter_list
 %nterm <param_decl_node *> parameter_declaration
-%nterm <param_type_list_node *> parameter_type_list
-%nterm <decl_specifiers_node *> declaration_specifiers */
+%nterm <param_type_list_node *> parameter_type_list */
+%nterm <declaration_specs *> declaration_specifiers
 %nterm <storage_specifiers::storage> storage_class_specifier
 %nterm <type_specifiers::type> type_specifier
 
@@ -222,10 +222,10 @@ declaration
 	;
 
 declaration_specifiers
-	: storage_class_specifier declaration_specifiers
-	| storage_class_specifier
-	| type_specifier declaration_specifiers
-	| type_specifier
+	: storage_class_specifier declaration_specifiers {$$ = $2.add($1);}
+	| storage_class_specifier {$$ = new declaration_specifiers().add($1);}
+	| type_specifier declaration_specifiers {$$ = $2.add($1);}
+	| type_specifier {$$ = new declaration_specifiers().add($1);}
 	| type_qualifier declaration_specifiers
 	| type_qualifier
 	| function_specifier declaration_specifiers

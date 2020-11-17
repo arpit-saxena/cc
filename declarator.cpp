@@ -7,7 +7,6 @@ declarator_node::declarator_node(direct_decl *decl, pointer_node *p) {
 
 identifier_declarator::identifier_declarator(std::string &&identifier) {
   this->identifier = identifier;
-  std::cout << "Identifier: " << this->identifier << '\n';
 }
 
 array_declarator::array_declarator(direct_decl *decl) {

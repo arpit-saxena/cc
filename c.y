@@ -222,10 +222,10 @@ declaration
 	;
 
 declaration_specifiers
-	: storage_class_specifier declaration_specifiers {$$ = $2.add($1);}
-	| storage_class_specifier {$$ = new declaration_specifiers().add($1);}
-	| type_specifier declaration_specifiers {$$ = $2.add($1);}
-	| type_specifier {$$ = new declaration_specifiers().add($1);}
+	: storage_class_specifier declaration_specifiers {$$ = $2->add($1);}
+	| storage_class_specifier {$$ = (new declaration_specs())->add($1);}
+	| type_specifier declaration_specifiers {$$ = $2->add($1);}
+	| type_specifier {$$ = (new declaration_specs())->add($1);}
 	| type_qualifier declaration_specifiers
 	| type_qualifier
 	| function_specifier declaration_specifiers

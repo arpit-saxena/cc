@@ -13,7 +13,13 @@ storage_specifiers *storage_specifiers::add_spec(storage spec) {
   return this;
 }
 
-type_specifiers::type_specifiers(type spec) { add_spec(spec); }
+type_specifiers::type_specifiers(type spec) {
+  if (spec == UNSET) {
+    this->specs = UNSET;
+    return;
+  }
+  add_spec(spec);
+}
 
 type_specifiers *type_specifiers::raise_incompat_error(type spec) {
   raise_error("Incompatible type specifiers");
@@ -36,12 +42,15 @@ type_specifiers *type_specifiers::add_spec(type spec) {
   }
 
   switch (this->specs) {
+    case UNSET:
+      return change_type(spec);
     case VOID:
     case SCHAR:
     case UCHAR:
     case UINT:
     case FLOAT:
     case BOOL:
+    case LONG_DOUBLE:
       return raise_incompat_error(spec);
     case CHAR:
       switch (spec) {
@@ -129,7 +138,37 @@ type_specifiers *type_specifiers::add_spec(type spec) {
         default:
           return raise_incompat_error(spec);
       }
+    case SIGNED:
+      switch (spec) {
+        case INT:
+        case SHORT:
+        case LONG:
+        case LONG_LONG:
+          return change_type(spec);
+        case CHAR:
+          return change_type(SCHAR);
+        default:
+          return raise_incompat_error(spec);
+      }
+    case UNSIGNED:
+      switch (spec) {
+        case INT:
+          return change_type(UINT);
+        case SHORT:
+          return change_type(USHORT);
+        case LONG:
+          return change_type(ULONG);
+        case LONG_LONG:
+          return change_type(ULONG_LONG);
+        case CHAR:
+          return change_type(UCHAR);
+        default:
+          return raise_incompat_error(spec);
+      }
   }
+
+  raise_error("Undefined type given to type_specifiers::add_spec");
+  return this;
 }
 
 type_specifiers::type type_specifiers::get_specs() { return specs; }

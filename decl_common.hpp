@@ -42,10 +42,13 @@ class storage_specifiers : public ast_node {
  * - COMPLEX is not mandated and so not supported by this implementation
  * - Does not contain atomic, struct, union, enum types. Implemented as derived
  *   classes
+ * - While there is always atleast one type specifier in the declaration
+ *   specifiers, the UNSET enum is given so a type specifier can be added later
  */
 class type_specifiers : public ast_node {
  public:
   enum type {
+    UNSET,
     VOID,
     CHAR,
     SCHAR,
@@ -75,7 +78,7 @@ class type_specifiers : public ast_node {
   type_specifiers* change_type(type specs);
 
  public:
-  type_specifiers(type spec);
+  type_specifiers(type spec = UNSET);
   type_specifiers* add_spec(type spec);
   type get_specs();
 };

@@ -15,6 +15,8 @@ void yyerror(const char *s);
 	#include "ast.hpp"
 	#include "decl_common.hpp"
 	#include "declarator.hpp"
+	#include "statement.hpp"
+	#include "func_def.hpp"
 }
 
 %define api.value.type union
@@ -45,6 +47,9 @@ void yyerror(const char *s);
 %nterm <pointer_node *> pointer
 %nterm <declarator_node *> declarator
 %nterm <direct_decl *> direct_declarator
+%nterm <external_decl *> external_declaration
+%nterm <func_def *> function_definition
+%nterm <trans_unit *> translation_unit
 
 %start translation_unit
 %%
@@ -536,18 +541,18 @@ jump_statement
 	;
 
 translation_unit
-	: external_declaration
-	| translation_unit external_declaration
+	: external_declaration {$$ = (new trans_unit())->add($1);}
+	| translation_unit external_declaration {$$ = $1->add($2);}
 	;
 
 external_declaration
-	: function_definition
+	: function_definition {$$ = $1;}
 	| declaration
 	;
 
 function_definition
-	: declaration_specifiers declarator declaration_list compound_statement
-	| declaration_specifiers declarator compound_statement
+	: declaration_specifiers declarator declaration_list compound_statement {func_def::old_style_error();}
+	| declaration_specifiers declarator compound_statement {$$ = new func_def($1, $2, new compound_stmt());}
 	;
 
 declaration_list

@@ -4,7 +4,11 @@
 #include <string>
 #include <vector>
 
-std::string ast_node::dump_tree() { return "yo"; }
+printer ast_node::cout;
+ast_node *ast_node::base = nullptr;
+
+void ast_node::dump_tree() { cout << "- (ast_node)" << endl; }
+
 void ast_node::raise_error(std::string err) {
   std::cerr << "Error: " << err << '\n';
 }

@@ -541,7 +541,7 @@ jump_statement
 	;
 
 translation_unit
-	: external_declaration {$$ = (new trans_unit())->add($1);}
+	: external_declaration {ast_node::base = $$ = (new trans_unit())->add($1);}
 	| translation_unit external_declaration {$$ = $1->add($2);}
 	;
 

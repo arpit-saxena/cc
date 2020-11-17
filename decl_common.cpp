@@ -13,6 +13,32 @@ storage_specifiers *storage_specifiers::add_spec(storage spec) {
   return this;
 }
 
+void storage_specifiers::dump_tree() {
+  if (spec != UNSET) {
+    cout << "- (storage_specifiers) " << to_string() << endl;
+  }
+}
+
+std::string storage_specifiers::to_string() {
+  switch (spec) {
+    case UNSET:
+      return "unset";
+    case TYPEDEF:
+      return "typedef";
+    case EXTERN:
+      return "extern";
+    case STATIC:
+      return "static";
+    case THREAD_LOCAL:
+      return "_Thread_local";
+    case AUTO:
+      return "auto";
+    case REGISTER:
+      return "register";
+  }
+  return "unkown";
+}
+
 type_specifiers::type_specifiers(type spec) {
   if (spec == UNSET) {
     this->specs = UNSET;
@@ -173,6 +199,54 @@ type_specifiers *type_specifiers::add_spec(type spec) {
 
 type_specifiers::type type_specifiers::get_specs() { return specs; }
 
+void type_specifiers::dump_tree() {
+  cout << "- (type_specifier) " << to_string() << endl;
+}
+
+std::string type_specifiers::to_string() {
+  switch (specs) {
+    case UNSET:
+      return "unset";
+    case VOID:
+      return "void";
+    case CHAR:
+      return "char";
+    case SCHAR:
+      return "signed char";
+    case UCHAR:
+      return "unsigned char";
+    case SHORT:
+      return "short";
+    case USHORT:
+      return "unsigned short";
+    case INT:
+      return "int";
+    case UINT:
+      return "unsigned int";
+    case LONG:
+      return "long";
+    case ULONG:
+      return "unsigned long";
+    case LONG_LONG:
+      return "long long";
+    case ULONG_LONG:
+      return "unsigned long long";
+    case FLOAT:
+      return "float";
+    case DOUBLE:
+      return "double";
+    case LONG_DOUBLE:
+      return "long double";
+    case SIGNED:
+      return "signed";
+    case UNSIGNED:
+      return "unsigned";
+    case BOOL:
+      return "bool";
+  }
+  return "unknown";
+}
+
 declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {
   this->storage_spec.add_spec(spec);
   return this;
@@ -181,4 +255,12 @@ declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {
 declaration_specs *declaration_specs::add(type_specifiers::type spec) {
   this->type_spec.add_spec(spec);
   return this;
+}
+
+void declaration_specs::dump_tree() {
+  cout << "- (declaration_specifiers)" << endl;
+  cout.indent();
+  storage_spec.dump_tree();
+  type_spec.dump_tree();
+  cout.unindent();
 }

@@ -6,7 +6,10 @@
 #include "ast.hpp"
 #include "decl_common.hpp"
 
-class direct_decl : public ast_node {};
+class direct_decl : public ast_node {
+ public:
+  virtual void dump_tree();
+};
 
 class declarator_node : public direct_decl {
   pointer_node *p;  // optional
@@ -14,6 +17,7 @@ class declarator_node : public direct_decl {
 
  public:
   declarator_node(direct_decl *decl, pointer_node *p = nullptr);
+  void dump_tree() override;
 };
 
 class identifier_declarator : public direct_decl {
@@ -21,6 +25,7 @@ class identifier_declarator : public direct_decl {
 
  public:
   identifier_declarator(std::string &&identifier);
+  void dump_tree() override;
 };
 
 ////////////////// ARRAY DECLARATOR ///////////////////////
@@ -30,6 +35,7 @@ class array_declarator : public direct_decl {
 
  public:
   array_declarator(direct_decl *decl);
+  void dump_tree() override;
 };
 
 //////////////// FUNCTION DECLARATOR ///////////////////////
@@ -61,6 +67,7 @@ class function_declarator : public direct_decl {
  public:
   function_declarator(direct_decl *decl, param_list *params = nullptr);
   static void old_style_error();
+  void dump_tree() override;
 };
 
 #endif /* DECLARATOR_HPP */

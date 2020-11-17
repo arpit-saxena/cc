@@ -32,6 +32,8 @@ class storage_specifiers : public ast_node {
  public:
   storage_specifiers(storage spec = UNSET);
   storage_specifiers* add_spec(storage spec);
+  void dump_tree() override;
+  std::string to_string();
 };
 
 /*
@@ -81,6 +83,8 @@ class type_specifiers : public ast_node {
   type_specifiers(type spec = UNSET);
   type_specifiers* add_spec(type spec);
   type get_specs();
+  void dump_tree() override;
+  std::string to_string();
 };
 
 // TODO: Add type_qualifier, function_specifier and alignment_specifier here
@@ -97,6 +101,7 @@ class declaration_specs : public ast_node {
  public:
   declaration_specs* add(storage_specifiers::storage storage_spec);
   declaration_specs* add(type_specifiers::type type_spec);
+  void dump_tree() override;
 };
 
 #endif /* DECL_COMMON_HPP */

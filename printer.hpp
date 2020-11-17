@@ -4,6 +4,8 @@
 #include <iostream>
 #include <ostream>
 
+using std::endl;
+
 // Template implementation from https://stackoverflow.com/a/25615296/5585431
 class printer {
   const int spaces_indent;

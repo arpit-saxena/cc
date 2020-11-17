@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ast.hpp"
 #include "c.tab.hpp"
 
 extern "C" int yylex();
@@ -19,6 +20,7 @@ int main(int argc, char **argv) {
   yyin = fopen(filename, "r");
   assert(yyin);
   int ret = yyparse();
+  ast_node::base->dump_tree();
   printf("retv = %d\n", ret);
   exit(0);
 }

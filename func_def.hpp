@@ -17,6 +17,7 @@ class func_def : public external_decl {
   func_def(declaration_specs *decl_specs, declarator_node *declarator,
            compound_stmt *statement);
   static void old_style_error();
+  void dump_tree() override;
 };
 
 class trans_unit : public ast_node {
@@ -24,6 +25,7 @@ class trans_unit : public ast_node {
 
  public:
   trans_unit *add(external_decl *decl);
+  void dump_tree() override;
 };
 
 #endif /* FUNC_DEF_HPP */

@@ -3,7 +3,11 @@
 
 #include "ast.hpp"
 
-class stmt_node : public ast_node {};
+class stmt_node : public ast_node {
+ public:
+  void dump_tree() override;
+};
+
 class labeled_stmt : public stmt_node {};
 class compound_stmt : public stmt_node {};
 class expression_stmt : public stmt_node {};

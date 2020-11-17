@@ -14,6 +14,7 @@ void yyerror(const char *s);
 %code requires {
 	#include "ast.hpp"
 	#include "decl_common.hpp"
+	#include "declarator.hpp"
 }
 
 %define api.value.type union
@@ -35,9 +36,8 @@ void yyerror(const char *s);
 
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
-/* %nterm <param_list_node *> parameter_list
-%nterm <param_decl_node *> parameter_declaration
-%nterm <param_type_list_node *> parameter_type_list */
+%nterm <param_declaration *> parameter_declaration
+%nterm <param_list *> parameter_type_list, parameter_list
 %nterm <declaration_specs *> declaration_specifiers
 %nterm <storage_specifiers::storage> storage_class_specifier
 %nterm <type_specifiers::type> type_specifier

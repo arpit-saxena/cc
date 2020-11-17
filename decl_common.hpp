@@ -85,7 +85,7 @@ class type_specifiers : public ast_node {
 
 // TODO: Add type_qualifier, function_specifier and alignment_specifier here
 
-class pointer : public ast_node {
+class pointer_node : public ast_node {
   // TODO: Add impl
 };
 

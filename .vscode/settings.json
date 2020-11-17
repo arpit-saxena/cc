@@ -71,7 +71,8 @@
         "typeinfo": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "*.inc": "cpp"
     },
     "editor.formatOnSave": true,
     "C_Cpp.clang_format_fallbackStyle": "",

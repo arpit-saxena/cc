@@ -19,14 +19,15 @@ void yyerror(const char *s);
 
 %define api.value.type union
 
-%token	IDENTIFIER I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
+%token	<const char *> IDENTIFIER
+%token  I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token	PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token	AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token	SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
 %token	XOR_ASSIGN OR_ASSIGN
 %token	TYPEDEF_NAME ENUMERATION_CONSTANT
 
-%token	<int> TYPEDEF EXTERN STATIC AUTO REGISTER INLINE
+%token	TYPEDEF EXTERN STATIC AUTO REGISTER INLINE
 %token	CONST RESTRICT VOLATILE
 %token	BOOL CHAR SHORT INT LONG SIGNED UNSIGNED FLOAT DOUBLE VOID
 %token	COMPLEX IMAGINARY 
@@ -37,10 +38,13 @@ void yyerror(const char *s);
 %token	ALIGNAS ALIGNOF ATOMIC GENERIC NORETURN STATIC_ASSERT THREAD_LOCAL
 
 %nterm <param_declaration *> parameter_declaration
-%nterm <param_list *> parameter_type_list, parameter_list
+%nterm <param_list *> parameter_type_list parameter_list
 %nterm <declaration_specs *> declaration_specifiers
 %nterm <storage_specifiers::storage> storage_class_specifier
 %nterm <type_specifiers::type> type_specifier
+%nterm <pointer_node *> pointer
+%nterm <declarator_node *> declarator
+%nterm <direct_decl *> direct_declarator
 
 %start translation_unit
 %%
@@ -352,13 +356,13 @@ alignment_specifier
 	;
 
 declarator
-	: pointer direct_declarator
-	| direct_declarator
+	: pointer direct_declarator {$$ = new declarator_node($2, $1);}
+	| direct_declarator {$$ = new declarator_node($1);}
 	;
 
 direct_declarator
-	: IDENTIFIER
-	| '(' declarator ')'
+	: IDENTIFIER {$$ = new identifier_declarator($1);}
+	| '(' declarator ')' {$$ = $2;}
 	| direct_declarator '[' ']'
 	| direct_declarator '[' '*' ']'
 	| direct_declarator '[' STATIC type_qualifier_list assignment_expression ']'
@@ -368,16 +372,16 @@ direct_declarator
 	| direct_declarator '[' type_qualifier_list assignment_expression ']'
 	| direct_declarator '[' type_qualifier_list ']'
 	| direct_declarator '[' assignment_expression ']'
-	| direct_declarator '(' parameter_type_list ')'
-	| direct_declarator '(' ')'
-	| direct_declarator '(' identifier_list ')'
+	| direct_declarator '(' parameter_type_list ')' {$$ = new function_declarator($1, $3);}
+	| direct_declarator '(' ')' {$$ = new function_declarator($1);}
+	| direct_declarator '(' identifier_list ')' {function_declarator::old_style_error();}
 	;
 
 pointer
-	: '*' type_qualifier_list pointer
-	| '*' type_qualifier_list
-	| '*' pointer
-	| '*'
+	: '*' type_qualifier_list pointer {$$ = new pointer_node();}
+	| '*' type_qualifier_list {$$ = new pointer_node();}
+	| '*' pointer {$$ = new pointer_node();}
+	| '*' {$$ = new pointer_node();}
 	;
 
 type_qualifier_list
@@ -387,19 +391,19 @@ type_qualifier_list
 
 
 parameter_type_list
-	: parameter_list ',' ELLIPSIS
-	| parameter_list
+	: parameter_list ',' ELLIPSIS {$$ = $1->make_vararg();}
+	| parameter_list {$$ = $1;}
 	;
 
 parameter_list
-	: parameter_declaration //{$$ = new param_list_node($1);}
-	| parameter_list ',' parameter_declaration //{$$ = $1->add_decl($3);}
+	: parameter_declaration {$$ = (new param_list())->add($1);}
+	| parameter_list ',' parameter_declaration {$$ = $1->add($3);}
 	;
 
 parameter_declaration
-	: declaration_specifiers declarator
+	: declaration_specifiers declarator {$$ = new param_declaration($1, $2);}
 	| declaration_specifiers abstract_declarator
-	| declaration_specifiers
+	| declaration_specifiers {$$ = new param_declaration($1);}
 	;
 
 identifier_list

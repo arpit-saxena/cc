@@ -1,9 +1,21 @@
 #ifndef STATEMENT_HPP
 #define STATEMENT_HPP
 
+#include <vector>
+
 #include "ast.hpp"
 
-class stmt_node : public ast_node {
+// TODO: Maybe move this into separate file when we add declaration too
+class blk_item : public ast_node {};
+
+class blk_item_list : public ast_node {
+  std::vector<blk_item *> items;
+
+ public:
+  blk_item_list *add(blk_item *item);
+};
+
+class stmt_node : public blk_item {
  public:
   void dump_tree() override;
 };

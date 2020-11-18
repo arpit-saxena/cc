@@ -20,7 +20,7 @@ identifier_declarator::identifier_declarator(std::string &&identifier) {
 }
 
 void identifier_declarator::dump_tree() {
-  cout << "-(identifier) " << identifier << endl;
+  cout << "- (identifier) " << identifier << endl;
 }
 
 array_declarator::array_declarator(direct_decl *decl) {
@@ -62,7 +62,7 @@ void function_declarator::old_style_error() {
 }
 
 void function_declarator::dump_tree() {
-  cout << "-(function_declarator)" << endl;
+  cout << "- (function_declarator)" << endl;
   cout.indent();
   decl->dump_tree();
   if (params) params->dump_tree();

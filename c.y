@@ -50,6 +50,11 @@ void yyerror(const char *s);
 %nterm <external_decl *> external_declaration
 %nterm <func_def *> function_definition
 %nterm <trans_unit *> translation_unit
+%nterm <blk_item *> block_item
+%nterm <blk_item_list *> block_item_list
+%nterm <stmt_node *> statement
+%nterm <expression_stmt *> expression_statement
+%nterm <compound_stmt *> compound_statement
 
 %start translation_unit
 %%
@@ -503,13 +508,13 @@ compound_statement
 	;
 
 block_item_list
-	: block_item
-	| block_item_list block_item
+	: block_item {$$ = (new blk_item_list())->add($1);}
+	| block_item_list block_item {$$ = $1->add($2);}
 	;
 
 block_item
 	: declaration
-	| statement
+	| statement {$$ = $1;}
 	;
 
 expression_statement

@@ -1,8 +1,28 @@
 #include "statement.hpp"
 
-blk_item_list *blk_item_list::add(blk_item *item) {
-  items.push_back(item);
+void blk_item::dump_tree() { cout << "- (block_item)" << endl; }
+
+void stmt_node::dump_tree() { cout << "- (statement)" << endl; }
+
+compound_stmt *compound_stmt::add(blk_item *item) {
+  block_items.push_back(item);
   return this;
 }
 
-void stmt_node::dump_tree() { cout << "- (statement)" << endl; }
+void compound_stmt::dump_tree() {
+  cout << "- (compound_statement)";
+  if (block_items.size() == 0) {
+    cout << " EMPTY" << endl;
+    return;
+  }
+  cout << endl;
+  cout.indent();
+  for (auto block_item : block_items) {
+    block_item->dump_tree();
+  }
+  cout.unindent();
+}
+
+void expression_stmt::dump_tree() {
+  cout << "- (expression_statement)" << endl;
+}

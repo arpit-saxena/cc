@@ -19,6 +19,7 @@ int main(int argc, char **argv) {
   char const *filename = argv[1];
   yyin = fopen(filename, "r");
   assert(yyin);
+  // yydebug = 1;
   int ret = yyparse();
   ast_node::base->dump_tree();
   printf("retv = %d\n", ret);

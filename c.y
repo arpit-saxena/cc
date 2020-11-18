@@ -20,6 +20,7 @@ void yyerror(const char *s);
 }
 
 %define api.value.type union
+%define parse.trace
 
 %token	<const char *> IDENTIFIER
 %token  I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
@@ -51,10 +52,9 @@ void yyerror(const char *s);
 %nterm <func_def *> function_definition
 %nterm <trans_unit *> translation_unit
 %nterm <blk_item *> block_item
-%nterm <blk_item_list *> block_item_list
 %nterm <stmt_node *> statement
 %nterm <expression_stmt *> expression_statement
-%nterm <compound_stmt *> compound_statement
+%nterm <compound_stmt *> compound_statement block_item_list
 
 %start translation_unit
 %%
@@ -490,7 +490,7 @@ static_assert_declaration
 statement
 	: labeled_statement
 	| compound_statement
-	| expression_statement
+	| expression_statement {$$ = $1;}
 	| selection_statement
 	| iteration_statement
 	| jump_statement
@@ -503,12 +503,12 @@ labeled_statement
 	;
 
 compound_statement
-	: '{' '}'
-	| '{'  block_item_list '}'
+	: '{' '}' {$$ = new compound_stmt();}
+	| '{'  block_item_list '}' {$$ = $2;}
 	;
 
 block_item_list
-	: block_item {$$ = (new blk_item_list())->add($1);}
+	: block_item {$$ = (new compound_stmt())->add($1);}
 	| block_item_list block_item {$$ = $1->add($2);}
 	;
 
@@ -518,8 +518,8 @@ block_item
 	;
 
 expression_statement
-	: ';'
-	| expression ';'
+	: ';' {$$ = new expression_stmt();}
+	| expression ';' {$$ = new expression_stmt();}
 	;
 
 selection_statement
@@ -557,7 +557,7 @@ external_declaration
 
 function_definition
 	: declaration_specifiers declarator declaration_list compound_statement {func_def::old_style_error();}
-	| declaration_specifiers declarator compound_statement {$$ = new func_def($1, $2, new compound_stmt());}
+	| declaration_specifiers declarator compound_statement {$$ = new func_def($1, $2, $3);}
 	;
 
 declaration_list

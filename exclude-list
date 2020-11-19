@@ -1,0 +1,12 @@
+*.zip
+vgcore*
+/out
+/cc
+/cc.bak
+/exclude-list
+/examples/rolling_test.c
+/src
+/c.tab.cpp
+/c.tab.hpp
+/c.lex.cpp
+/submission/

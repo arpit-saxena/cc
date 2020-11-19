@@ -21,7 +21,9 @@ int main(int argc, char **argv) {
   assert(yyin);
   // yydebug = 1;
   int ret = yyparse();
+  printf("--- AST BEGIN ---\n\n");
   ast_node::base->dump_tree();
+  printf("\n--- AST END ---\n\n");
   printf("retv = %d\n", ret);
   exit(0);
 }

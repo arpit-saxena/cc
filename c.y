@@ -17,13 +17,14 @@ void yyerror(const char *s);
 	#include "declarator.hpp"
 	#include "statement.hpp"
 	#include "func_def.hpp"
+	#include "expression.hpp"
 }
 
 %define api.value.type union
 %define parse.trace
 
 %token	<const char *> IDENTIFIER
-%token  I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
+%token  <const char *> I_CONSTANT F_CONSTANT STRING_LITERAL FUNC_NAME SIZEOF
 %token	PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP
 %token	AND_OP OR_OP MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN
 %token	SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN
@@ -56,19 +57,38 @@ void yyerror(const char *s);
 %nterm <expression_stmt *> expression_statement
 %nterm <compound_stmt *> compound_statement block_item_list
 
+%nterm <primary_expr *> primary_expression
+%nterm <const_expr *> constant
+%nterm <postfix_expr *> postfix_expression
+%nterm <unary_expr *> unary_expression
+%nterm <cast_expr *> cast_expression
+%nterm <mult_expr *> multiplicative_expression
+%nterm <add_expr *> additive_expression
+%nterm <shift_expr *> shift_expression
+%nterm <rel_expr *> relational_expression
+%nterm <eq_expr *> equality_expression
+%nterm <and_expr *> and_expression
+%nterm <xor_expr *> exclusive_or_expression
+%nterm <or_expr *> inclusive_or_expression
+%nterm <logic_and_expr *> logical_and_expression
+%nterm <logic_or_expr *> logical_or_expression
+%nterm <cond_expr *> conditional_expression
+%nterm <assign_expr *> assignment_expression
+%nterm <expr *> expression
+
 %start translation_unit
 %%
 
 primary_expression
-	: IDENTIFIER
-	| constant
+	: IDENTIFIER {$$ = new ident_expr($1);}
+	| constant {$$ = $1;}
 	| string
-	| '(' expression ')'
+	| '(' expression ')' {$$ = new paren_expr($2);}
 	| generic_selection
 	;
 
 constant
-	: I_CONSTANT		/* includes character_constant */
+	: I_CONSTANT {$$ = new int_constant_expr($1);}		/* includes character_constant */
 	| F_CONSTANT
 	| ENUMERATION_CONSTANT	/* after it has been defined as such */
 	;
@@ -97,7 +117,7 @@ generic_association
 	;
 
 postfix_expression
-	: primary_expression
+	: primary_expression {$$ = $1;}
 	| postfix_expression '[' expression ']'
 	| postfix_expression '(' ')'
 	| postfix_expression '(' argument_expression_list ')'
@@ -115,7 +135,7 @@ argument_expression_list
 	;
 
 unary_expression
-	: postfix_expression
+	: postfix_expression {$$ = $1;}
 	| INC_OP unary_expression
 	| DEC_OP unary_expression
 	| unary_operator cast_expression
@@ -134,75 +154,75 @@ unary_operator
 	;
 
 cast_expression
-	: unary_expression
+	: unary_expression {$$ = $1;}
 	| '(' type_name ')' cast_expression
 	;
 
 multiplicative_expression
-	: cast_expression
-	| multiplicative_expression '*' cast_expression
-	| multiplicative_expression '/' cast_expression
-	| multiplicative_expression '%' cast_expression
+	: cast_expression {$$ = $1;}
+	| multiplicative_expression '*' cast_expression {$$ = new mult_expr($1, '*', $3);}
+	| multiplicative_expression '/' cast_expression {$$ = new mult_expr($1, '/', $3);}
+	| multiplicative_expression '%' cast_expression {$$ = new mult_expr($1, '%', $3);}
 	;
 
 additive_expression
-	: multiplicative_expression
-	| additive_expression '+' multiplicative_expression
-	| additive_expression '-' multiplicative_expression
+	: multiplicative_expression {$$ = $1;}
+	| additive_expression '+' multiplicative_expression {$$ = new add_expr($1, '+', $3);}
+	| additive_expression '-' multiplicative_expression {$$ = new add_expr($1, '-', $3);}
 	;
 
 shift_expression
-	: additive_expression
-	| shift_expression LEFT_OP additive_expression
-	| shift_expression RIGHT_OP additive_expression
+	: additive_expression {$$ = $1;}
+	| shift_expression LEFT_OP additive_expression {$$ = new shift_expr($1, shift_expr::SHIFT_LEFT, $3);}
+	| shift_expression RIGHT_OP additive_expression {$$ = new shift_expr($1, shift_expr::SHIFT_RIGHT, $3);}
 	;
 
 relational_expression
-	: shift_expression
-	| relational_expression '<' shift_expression
-	| relational_expression '>' shift_expression
-	| relational_expression LE_OP shift_expression
-	| relational_expression GE_OP shift_expression
+	: shift_expression {$$ = $1;}
+	| relational_expression '<' shift_expression {$$ = new rel_expr($1, rel_expr::LT, $3);}
+	| relational_expression '>' shift_expression {$$ = new rel_expr($1, rel_expr::GT, $3);}
+	| relational_expression LE_OP shift_expression {$$ = new rel_expr($1, rel_expr::LE, $3);}
+	| relational_expression GE_OP shift_expression {$$ = new rel_expr($1, rel_expr::GE, $3);}
 	;
 
 equality_expression
-	: relational_expression
+	: relational_expression {$$ = $1;}
 	| equality_expression EQ_OP relational_expression
 	| equality_expression NE_OP relational_expression
 	;
 
 and_expression
-	: equality_expression
-	| and_expression '&' equality_expression
+	: equality_expression {$$ = $1;}
+	| and_expression '&' equality_expression {$$ = new and_expr($1, $3);}
 	;
 
 exclusive_or_expression
-	: and_expression
+	: and_expression {$$ = $1;}
 	| exclusive_or_expression '^' and_expression
 	;
 
 inclusive_or_expression
-	: exclusive_or_expression
-	| inclusive_or_expression '|' exclusive_or_expression
+	: exclusive_or_expression {$$ = $1;}
+	| inclusive_or_expression '|' exclusive_or_expression {$$ = new or_expr($1, $3);}
 	;
 
 logical_and_expression
-	: inclusive_or_expression
-	| logical_and_expression AND_OP inclusive_or_expression
+	: inclusive_or_expression {$$ = $1;}
+	| logical_and_expression AND_OP inclusive_or_expression {$$ = new logic_and_expr($1, $3);}
 	;
 
 logical_or_expression
-	: logical_and_expression
-	| logical_or_expression OR_OP logical_and_expression
+	: logical_and_expression {$$ = $1;}
+	| logical_or_expression OR_OP logical_and_expression {$$ = new logic_or_expr($1, $3);}
 	;
 
 conditional_expression
-	: logical_or_expression
+	: logical_or_expression {$$ = $1;}
 	| logical_or_expression '?' expression ':' conditional_expression
 	;
 
 assignment_expression
-	: conditional_expression
+	: conditional_expression {$$ = $1;}
 	| unary_expression assignment_operator assignment_expression
 	;
 
@@ -221,7 +241,7 @@ assignment_operator
 	;
 
 expression
-	: assignment_expression
+	: assignment_expression {$$ = $1;}
 	| expression ',' assignment_expression
 	;
 

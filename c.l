@@ -89,10 +89,10 @@ static int check_type(void);
 
 {L}{A}*					{ return check_type(); }
 
-{HP}{H}+{IS}?				{ return I_CONSTANT; }
-{NZ}{D}*{IS}?				{ return I_CONSTANT; }
-"0"{O}*{IS}?				{ return I_CONSTANT; }
-{CP}?"'"([^'\\\n]|{ES})+"'"		{ return I_CONSTANT; }
+{HP}{H}+{IS}?				{ yylval.I_CONSTANT = strdup(yytext); return I_CONSTANT; }
+{NZ}{D}*{IS}?				{ yylval.I_CONSTANT = strdup(yytext); return I_CONSTANT; }
+"0"{O}*{IS}?				{ yylval.I_CONSTANT = strdup(yytext); return I_CONSTANT; }
+{CP}?"'"([^'\\\n]|{ES})+"'"		{ yylval.I_CONSTANT = strdup(yytext); return I_CONSTANT; }
 
 {D}+{E}{FS}?				{ return F_CONSTANT; }
 {D}*"."{D}+{E}?{FS}?			{ return F_CONSTANT; }

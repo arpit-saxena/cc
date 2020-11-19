@@ -49,6 +49,7 @@ class param_declaration : public ast_node {
  public:
   param_declaration(declaration_specs *decl_spec,
                     declarator_node *decl = nullptr);
+  void dump_tree() override;
 };
 
 class param_list : public ast_node {
@@ -58,6 +59,7 @@ class param_list : public ast_node {
  public:
   param_list *add(param_declaration *decl);
   param_list *make_vararg();
+  void dump_tree() override;
 };
 
 class function_declarator : public direct_decl {

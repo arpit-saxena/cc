@@ -41,6 +41,14 @@ param_declaration::param_declaration(declaration_specs *decl_spec,
   this->decl = decl;
 }
 
+void param_declaration::dump_tree() {
+  cout << "- (parameter_declaration)" << endl;
+  cout.indent();
+  decl_spec->dump_tree();
+  if (decl) decl->dump_tree();
+  cout.unindent();
+}
+
 param_list *param_list::add(param_declaration *decl) {
   param_decls.push_back(decl);
   return this;
@@ -49,6 +57,18 @@ param_list *param_list::add(param_declaration *decl) {
 param_list *param_list::make_vararg() {
   is_vararg = true;
   return this;
+}
+
+void param_list::dump_tree() {
+  cout << "- (parameter_list)" << endl;
+  cout.indent();
+  for (auto decl : param_decls) {
+    decl->dump_tree();
+  }
+  if (is_vararg) {
+    cout << "- varargs" << endl;
+  }
+  cout.unindent();
 }
 
 function_declarator::function_declarator(direct_decl *decl,

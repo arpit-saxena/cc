@@ -62,16 +62,18 @@ void yyerror(const char *s);
 %nterm <postfix_expr *> postfix_expression
 %nterm <unary_expr *> unary_expression
 %nterm <cast_expr *> cast_expression
-%nterm <mult_expr *> multiplicative_expression
-%nterm <add_expr *> additive_expression
-%nterm <shift_expr *> shift_expression
-%nterm <rel_expr *> relational_expression
-%nterm <eq_expr *> equality_expression
-%nterm <and_expr *> and_expression
-%nterm <xor_expr *> exclusive_or_expression
-%nterm <or_expr *> inclusive_or_expression
-%nterm <logic_and_expr *> logical_and_expression
-%nterm <logic_or_expr *> logical_or_expression
+
+%nterm <binary_expr *> multiplicative_expression
+					   additive_expression
+					   shift_expression
+					   relational_expression
+					   equality_expression
+					   and_expression
+					   exclusive_or_expression
+					   inclusive_or_expression
+					   logical_and_expression
+					   logical_or_expression
+
 %nterm <cond_expr *> conditional_expression
 %nterm <assign_expr *> assignment_expression
 %nterm <expr *> expression
@@ -160,60 +162,60 @@ cast_expression
 
 multiplicative_expression
 	: cast_expression {$$ = $1;}
-	| multiplicative_expression '*' cast_expression {$$ = new mult_expr($1, '*', $3);}
-	| multiplicative_expression '/' cast_expression {$$ = new mult_expr($1, '/', $3);}
-	| multiplicative_expression '%' cast_expression {$$ = new mult_expr($1, '%', $3);}
+	| multiplicative_expression '*' cast_expression {$$ = new binary_expr_ops($1, binary_expr_ops::MULT, $3);}
+	| multiplicative_expression '/' cast_expression {$$ = new binary_expr_ops($1, binary_expr_ops::DIV, $3);}
+	| multiplicative_expression '%' cast_expression {$$ = new binary_expr_ops($1, binary_expr_ops::MOD, $3);}
 	;
 
 additive_expression
 	: multiplicative_expression {$$ = $1;}
-	| additive_expression '+' multiplicative_expression {$$ = new add_expr($1, '+', $3);}
-	| additive_expression '-' multiplicative_expression {$$ = new add_expr($1, '-', $3);}
+	| additive_expression '+' multiplicative_expression {$$ = new binary_expr_ops($1, binary_expr_ops::PLUS, $3);}
+	| additive_expression '-' multiplicative_expression {$$ = new binary_expr_ops($1, binary_expr_ops::MINUS, $3);}
 	;
 
 shift_expression
 	: additive_expression {$$ = $1;}
-	| shift_expression LEFT_OP additive_expression {$$ = new shift_expr($1, shift_expr::SHIFT_LEFT, $3);}
-	| shift_expression RIGHT_OP additive_expression {$$ = new shift_expr($1, shift_expr::SHIFT_RIGHT, $3);}
+	| shift_expression LEFT_OP additive_expression {$$ = new binary_expr_ops($1, binary_expr_ops::SHIFT_LEFT, $3);}
+	| shift_expression RIGHT_OP additive_expression {$$ = new binary_expr_ops($1, binary_expr_ops::SHIFT_RIGHT, $3);}
 	;
 
 relational_expression
 	: shift_expression {$$ = $1;}
-	| relational_expression '<' shift_expression {$$ = new rel_expr($1, rel_expr::LT, $3);}
-	| relational_expression '>' shift_expression {$$ = new rel_expr($1, rel_expr::GT, $3);}
-	| relational_expression LE_OP shift_expression {$$ = new rel_expr($1, rel_expr::LE, $3);}
-	| relational_expression GE_OP shift_expression {$$ = new rel_expr($1, rel_expr::GE, $3);}
+	| relational_expression '<' shift_expression {$$ = new binary_expr_ops($1, binary_expr_ops::LT, $3);}
+	| relational_expression '>' shift_expression {$$ = new binary_expr_ops($1, binary_expr_ops::GT, $3);}
+	| relational_expression LE_OP shift_expression {$$ = new binary_expr_ops($1, binary_expr_ops::LE, $3);}
+	| relational_expression GE_OP shift_expression {$$ = new binary_expr_ops($1, binary_expr_ops::GE, $3);}
 	;
 
 equality_expression
 	: relational_expression {$$ = $1;}
-	| equality_expression EQ_OP relational_expression
-	| equality_expression NE_OP relational_expression
+	| equality_expression EQ_OP relational_expression {$$ = new binary_expr_ops($1, binary_expr_ops::EQ, $3);}
+	| equality_expression NE_OP relational_expression {$$ = new binary_expr_ops($1, binary_expr_ops::NE, $3);}
 	;
 
 and_expression
 	: equality_expression {$$ = $1;}
-	| and_expression '&' equality_expression {$$ = new and_expr($1, $3);}
+	| and_expression '&' equality_expression {$$ = new binary_expr_ops($1, binary_expr_ops::BIT_AND, $3);}
 	;
 
 exclusive_or_expression
 	: and_expression {$$ = $1;}
-	| exclusive_or_expression '^' and_expression
+	| exclusive_or_expression '^' and_expression {$$ = new binary_expr_ops($1, binary_expr_ops::BIT_XOR, $3);}
 	;
 
 inclusive_or_expression
 	: exclusive_or_expression {$$ = $1;}
-	| inclusive_or_expression '|' exclusive_or_expression {$$ = new or_expr($1, $3);}
+	| inclusive_or_expression '|' exclusive_or_expression {$$ = new binary_expr_ops($1, binary_expr_ops::BIT_OR, $3);}
 	;
 
 logical_and_expression
 	: inclusive_or_expression {$$ = $1;}
-	| logical_and_expression AND_OP inclusive_or_expression {$$ = new logic_and_expr($1, $3);}
+	| logical_and_expression AND_OP inclusive_or_expression {$$ = new binary_expr_ops($1, binary_expr_ops::AND, $3);}
 	;
 
 logical_or_expression
 	: logical_and_expression {$$ = $1;}
-	| logical_or_expression OR_OP logical_and_expression {$$ = new logic_or_expr($1, $3);}
+	| logical_or_expression OR_OP logical_and_expression {$$ = new binary_expr_ops($1, binary_expr_ops::OR, $3);}
 	;
 
 conditional_expression

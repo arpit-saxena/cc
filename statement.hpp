@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "expression.hpp"
 
 // TODO: Maybe move this into separate file when we add declaration too
 class blk_item : public ast_node {
@@ -27,7 +28,10 @@ class compound_stmt : public stmt_node {
 };
 
 class expression_stmt : public stmt_node {
+  expr *expression;  // Optional
+
  public:
+  expression_stmt(expr *expression = nullptr);
   void dump_tree() override;
 };
 

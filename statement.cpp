@@ -23,6 +23,18 @@ void compound_stmt::dump_tree() {
   cout.unindent();
 }
 
+expression_stmt::expression_stmt(expr *expression) {
+  this->expression = expression;
+}
+
 void expression_stmt::dump_tree() {
-  cout << "- (expression_statement)" << endl;
+  cout << "- (expression_statement)";
+  if (!expression) {
+    cout << " EMPTY" << endl;
+    return;
+  }
+  cout << endl;
+  cout.indent();
+  expression->dump_tree();
+  cout.unindent();
 }

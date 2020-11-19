@@ -55,6 +55,8 @@ class binary_expr_ops : public binary_expr {
 
  public:
   binary_expr_ops(binary_expr *left, OP op, binary_expr *right);
+  static std::string op_string(OP op);
+  virtual void dump_tree() override;
 };
 
 class cast_expr : public binary_expr {};
@@ -67,6 +69,7 @@ class ident_expr : public primary_expr {
 
  public:
   ident_expr(const char *id);
+  void dump_tree() override;
 };
 
 class const_expr : public primary_expr {};
@@ -78,6 +81,7 @@ class int_constant_expr : public const_expr {
 
  public:
   int_constant_expr(const char *id);
+  void dump_tree() override;
 };
 
 class paren_expr : public primary_expr {
@@ -85,6 +89,7 @@ class paren_expr : public primary_expr {
 
  public:
   paren_expr(expr *expression);
+  void dump_tree() override;
 };
 
 #endif /* EXPRESSION_HPP */

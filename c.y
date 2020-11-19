@@ -541,7 +541,7 @@ block_item
 
 expression_statement
 	: ';' {$$ = new expression_stmt();}
-	| expression ';' {$$ = new expression_stmt();}
+	| expression ';' {$$ = new expression_stmt($1);}
 	;
 
 selection_statement

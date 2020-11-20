@@ -14,7 +14,7 @@
  * This is done so an expression down the hierarchy don't have to construct all
  * expressions up the hierarchy. It also makes logical sense since, for example
  * a conditional expression is an assignment expression, but "a = 5" is an
- * assignment expression and not a cast expression
+ * assignment expression and not a conditional expression
  */
 
 class expr : public ast_node {};
@@ -72,6 +72,14 @@ class ident_expr : public primary_expr {
   void dump_tree() override;
 };
 
+class paren_expr : public primary_expr {
+  expr *expression;
+
+ public:
+  paren_expr(expr *expression);
+  void dump_tree() override;
+};
+
 class const_expr : public primary_expr {};
 
 // Includes character and integer constants
@@ -81,14 +89,6 @@ class int_constant_expr : public const_expr {
 
  public:
   int_constant_expr(const char *id);
-  void dump_tree() override;
-};
-
-class paren_expr : public primary_expr {
-  expr *expression;
-
- public:
-  paren_expr(expr *expression);
   void dump_tree() override;
 };
 

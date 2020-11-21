@@ -48,6 +48,7 @@ void yyerror(const char *s);
 %nterm <type_specifiers::type> type_specifier
 %nterm <type_qualifiers::qualifier> type_qualifier
 %nterm <pointer_node *> pointer
+%nterm <type_qualifiers *> type_qualifier_list
 %nterm <declarator_node *> declarator
 %nterm <direct_decl *> direct_declarator
 %nterm <external_decl *> external_declaration
@@ -418,8 +419,8 @@ pointer
 	;
 
 type_qualifier_list
-	: type_qualifier
-	| type_qualifier_list type_qualifier
+	: type_qualifier {$$ = (new type_qualifiers())->add_qual($1);}
+	| type_qualifier_list type_qualifier {$$ = $1->add_qual($2);}
 	;
 
 

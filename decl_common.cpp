@@ -261,7 +261,7 @@ void type_qualifiers::dump_tree() {
     return;
   }
 
-  cout << "- (type qualifiers) ";
+  cout << "- (type_qualifiers) ";
   for (auto qual : qualifiers) {
     cout << to_string(qual) << ' ';
   }

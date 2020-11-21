@@ -99,6 +99,7 @@ class type_qualifiers : public ast_node {
   std::set<qualifier> qualifiers;
 
  public:
+  type_qualifiers() = default;
   type_qualifiers* add_qual(qualifier qual);
   void dump_tree() override;
   static std::string to_string(qualifier qual);

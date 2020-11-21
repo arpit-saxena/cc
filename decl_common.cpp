@@ -247,6 +247,41 @@ std::string type_specifiers::to_string() {
   return "unknown";
 }
 
+type_qualifiers *type_qualifiers::add_qual(type_qualifiers::qualifier qual) {
+  // Section 6.7.3, point 5: "If the same qualifier appears more than once
+  // in the samespecifier-qualifier-list, either directly or via one or
+  // more typedefs, the behavior is the same as if it appeared only once."
+  // So we simply insert into the set and don't check for repetitions;
+  qualifiers.insert(qual);
+  return this;
+}
+
+void type_qualifiers::dump_tree() {
+  if (qualifiers.empty()) {
+    return;
+  }
+
+  cout << "- (type qualifiers) ";
+  for (auto qual : qualifiers) {
+    cout << to_string(qual) << ' ';
+  }
+  cout << endl;
+}
+
+std::string type_qualifiers::to_string(type_qualifiers::qualifier qual) {
+  switch (qual) {
+    case CONST:
+      return "const";
+    case RESTRICT:
+      return "restrict";
+    case VOLATILE:
+      return "volatile";
+    case ATOMIC:
+      return "_Atomic";
+  }
+  return "unknown";
+}
+
 declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {
   this->storage_spec.add_spec(spec);
   return this;
@@ -257,10 +292,16 @@ declaration_specs *declaration_specs::add(type_specifiers::type spec) {
   return this;
 }
 
+declaration_specs *declaration_specs::add(type_qualifiers::qualifier qual) {
+  this->type_qual.add_qual(qual);
+  return this;
+}
+
 void declaration_specs::dump_tree() {
   cout << "- (declaration_specifiers)" << endl;
   cout.indent();
   storage_spec.dump_tree();
   type_spec.dump_tree();
+  type_qual.dump_tree();
   cout.unindent();
 }

@@ -87,6 +87,23 @@ class type_specifiers : public ast_node {
   std::string to_string();
 };
 
+/*
+ * (Section 6.7.3)
+ * Represents one or more type qualifiers in the declaration specifiers
+ */
+class type_qualifiers : public ast_node {
+ public:
+  enum qualifier { CONST, RESTRICT, VOLATILE, ATOMIC };
+
+ private:
+  std::set<qualifier> qualifiers;
+
+ public:
+  type_qualifiers* add_qual(qualifier qual);
+  void dump_tree() override;
+  static std::string to_string(qualifier qual);
+};
+
 // TODO: Add type_qualifier, function_specifier and alignment_specifier here
 
 class pointer_node : public ast_node {
@@ -96,11 +113,13 @@ class pointer_node : public ast_node {
 class declaration_specs : public ast_node {
   storage_specifiers storage_spec;
   type_specifiers type_spec;
-  // TODO: Add type qualifier, function_specifier and alignment specifier
+  type_qualifiers type_qual;
+  // TODO: Add function_specifier and alignment specifier
 
  public:
   declaration_specs* add(storage_specifiers::storage storage_spec);
   declaration_specs* add(type_specifiers::type type_spec);
+  declaration_specs* add(type_qualifiers::qualifier type_qual);
   void dump_tree() override;
 };
 

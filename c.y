@@ -46,6 +46,7 @@ void yyerror(const char *s);
 %nterm <declaration_specs *> declaration_specifiers
 %nterm <storage_specifiers::storage> storage_class_specifier
 %nterm <type_specifiers::type> type_specifier
+%nterm <type_qualifiers::qualifier> type_qualifier
 %nterm <pointer_node *> pointer
 %nterm <declarator_node *> declarator
 %nterm <direct_decl *> direct_declarator
@@ -262,8 +263,8 @@ declaration_specifiers
 	| storage_class_specifier {$$ = (new declaration_specs())->add($1);}
 	| type_specifier declaration_specifiers {$$ = $2->add($1);}
 	| type_specifier {$$ = (new declaration_specs())->add($1);}
-	| type_qualifier declaration_specifiers
-	| type_qualifier
+	| type_qualifier declaration_specifiers {$$ = $2->add($1);}
+	| type_qualifier {$$ = (new declaration_specs)->add($1);}
 	| function_specifier declaration_specifiers
 	| function_specifier
 	| alignment_specifier declaration_specifiers
@@ -371,10 +372,10 @@ atomic_type_specifier
 	;
 
 type_qualifier
-	: CONST
-	| RESTRICT
-	| VOLATILE
-	| ATOMIC
+	: CONST {$$ = type_qualifiers::CONST;}
+	| RESTRICT {$$ = type_qualifiers::RESTRICT;}
+	| VOLATILE {$$ = type_qualifiers::VOLATILE;}
+	| ATOMIC {$$ = type_qualifiers::ATOMIC;}
 	;
 
 function_specifier

@@ -257,11 +257,12 @@ type_qualifiers *type_qualifiers::add_qual(type_qualifiers::qualifier qual) {
 }
 
 void type_qualifiers::dump_tree() {
+  cout << "- (type_qualifiers) ";
   if (qualifiers.empty()) {
+    cout << "NONE" << endl;
     return;
   }
 
-  cout << "- (type_qualifiers) ";
   for (auto qual : qualifiers) {
     cout << to_string(qual) << ' ';
   }
@@ -280,6 +281,20 @@ std::string type_qualifiers::to_string(type_qualifiers::qualifier qual) {
       return "_Atomic";
   }
   return "unknown";
+}
+
+pointer_node *pointer_node::add(type_qualifiers *qual) {
+  quals.push_back(qual);
+  return this;
+}
+
+void pointer_node::dump_tree() {
+  cout << "- (pointer)" << endl;
+  cout.indent();
+  for (auto &qual : quals) {
+    qual->dump_tree();
+  }
+  cout.unindent();
 }
 
 declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {

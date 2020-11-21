@@ -99,16 +99,19 @@ class type_qualifiers : public ast_node {
   std::set<qualifier> qualifiers;
 
  public:
-  type_qualifiers() = default;
   type_qualifiers* add_qual(qualifier qual);
   void dump_tree() override;
   static std::string to_string(qualifier qual);
 };
 
-// TODO: Add type_qualifier, function_specifier and alignment_specifier here
+// TODO: Add function_specifier and alignment_specifier here
 
 class pointer_node : public ast_node {
-  // TODO: Add impl
+  std::vector<type_qualifiers*> quals;
+
+ public:
+  pointer_node* add(type_qualifiers* quals);
+  void dump_tree() override;
 };
 
 class declaration_specs : public ast_node {

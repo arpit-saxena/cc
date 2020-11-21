@@ -412,10 +412,10 @@ direct_declarator
 	;
 
 pointer
-	: '*' type_qualifier_list pointer {$$ = new pointer_node();}
-	| '*' type_qualifier_list {$$ = new pointer_node();}
-	| '*' pointer {$$ = new pointer_node();}
-	| '*' {$$ = new pointer_node();}
+	: '*' type_qualifier_list pointer {$$ = $3->add($2);}
+	| '*' type_qualifier_list {$$ = (new pointer_node())->add($2);}
+	| '*' pointer {$$ = $2->add(new type_qualifiers());}
+	| '*' {$$ = (new pointer_node())->add(new type_qualifiers());}
 	;
 
 type_qualifier_list

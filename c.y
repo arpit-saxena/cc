@@ -59,6 +59,7 @@ void yyerror(const char *s);
 %nterm <stmt_node *> statement
 %nterm <expression_stmt *> expression_statement
 %nterm <compound_stmt *> compound_statement block_item_list
+%nterm <jump_stmt *> jump_statement
 
 %nterm <primary_expr *> primary_expression
 %nterm <const_expr *> constant
@@ -573,8 +574,8 @@ jump_statement
 	: GOTO IDENTIFIER ';'
 	| CONTINUE ';'
 	| BREAK ';'
-	| RETURN ';'
-	| RETURN expression ';'
+	| RETURN ';' {$$ = new return_stmt();}
+	| RETURN expression ';' {$$ = new return_stmt($2);}
 	;
 
 translation_unit

@@ -32,6 +32,18 @@ class expression_stmt : public stmt_node {
 
 class selection_stmt : public stmt_node {};
 class iteration_stmt : public stmt_node {};
-class jump_stmt : public stmt_node {};
+
+class jump_stmt : public stmt_node {
+ public:
+  void dump_tree() override;
+};
+
+class return_stmt : public jump_stmt {
+  expr *expression;  // Optional
+
+ public:
+  return_stmt(expr *expression = nullptr);
+  void dump_tree() override;
+};
 
 #endif /* STATEMENT_HPP */

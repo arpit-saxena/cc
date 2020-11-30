@@ -36,3 +36,16 @@ void expression_stmt::dump_tree() {
   expression->dump_tree();
   cout.unindent();
 }
+
+void jump_stmt::dump_tree() { cout << "- (jump_statement)" << endl; }
+
+return_stmt::return_stmt(expr *expression) { this->expression = expression; }
+
+void return_stmt::dump_tree() {
+  cout << "- (return_statement)" << endl;
+  if (expression) {
+    cout.indent();
+    expression->dump_tree();
+    cout.unindent();
+  }
+}

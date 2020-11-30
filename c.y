@@ -65,6 +65,7 @@ void yyerror(const char *s);
 %nterm <const_expr *> constant
 %nterm <string_expr *> string
 %nterm <postfix_expr *> postfix_expression
+%nterm <arg_expr_list *> argument_expression_list
 %nterm <unary_expr *> unary_expression
 %nterm <cast_expr *> cast_expression
 
@@ -132,8 +133,8 @@ generic_association
 postfix_expression
 	: primary_expression {$$ = $1;}
 	| postfix_expression '[' expression ']'
-	| postfix_expression '(' ')'
-	| postfix_expression '(' argument_expression_list ')'
+	| postfix_expression '(' ')' {$$ = new func_call($1);}
+	| postfix_expression '(' argument_expression_list ')' {$$ = new func_call($1, $3);}
 	| postfix_expression '.' IDENTIFIER
 	| postfix_expression PTR_OP IDENTIFIER
 	| postfix_expression INC_OP
@@ -143,8 +144,8 @@ postfix_expression
 	;
 
 argument_expression_list
-	: assignment_expression
-	| argument_expression_list ',' assignment_expression
+	: assignment_expression {$$ = (new arg_expr_list())->add($1);}
+	| argument_expression_list ',' assignment_expression {$$ = $1->add($3);}
 	;
 
 unary_expression

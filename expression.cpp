@@ -60,6 +60,35 @@ void binary_expr_ops::dump_tree() {
   cout.unindent();
 }
 
+arg_expr_list *arg_expr_list::add(assign_expr *expr) {
+  exprs.push_back(expr);
+  return this;
+}
+
+void arg_expr_list::dump_tree() {
+  cout << "- (argument_expression_list)" << endl;
+  cout.indent();
+  for (auto &expr : exprs) {
+    expr->dump_tree();
+  }
+  cout.unindent();
+}
+
+func_call::func_call(postfix_expr *func_expr, arg_expr_list *expr_list) {
+  this->func_expr = func_expr;
+  this->arg_list = expr_list;
+}
+
+void func_call::dump_tree() {
+  cout << "- (functional_call)" << endl;
+  cout.indent();
+  func_expr->dump_tree();
+  if (arg_list) {
+    arg_list->dump_tree();
+  }
+  cout.unindent();
+}
+
 ident_expr::ident_expr(const char *id) { identifier = std::string(id); }
 
 void ident_expr::dump_tree() {
@@ -79,3 +108,5 @@ void int_constant_expr::dump_tree() {
 }
 
 string_expr::string_expr(const char *str) : str(str) { free((void *)str); }
+
+void string_expr::dump_tree() { cout << "- (string) " << str << endl; }

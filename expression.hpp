@@ -61,7 +61,26 @@ class binary_expr_ops : public binary_expr {
 
 class cast_expr : public binary_expr {};
 class unary_expr : public cast_expr {};
+
+class arg_expr_list : public ast_node {
+  std::vector<assign_expr *> exprs;
+
+ public:
+  arg_expr_list *add(assign_expr *expr);
+  void dump_tree() override;
+};
+
 class postfix_expr : public unary_expr {};
+
+class func_call : public postfix_expr {
+  postfix_expr *func_expr;
+  arg_expr_list *arg_list;  // Optional
+
+ public:
+  func_call(postfix_expr *func_expr, arg_expr_list *expr_list = nullptr);
+  void dump_tree() override;
+};
+
 class primary_expr : public postfix_expr {};
 
 class ident_expr : public primary_expr {
@@ -97,6 +116,7 @@ class string_expr : public primary_expr {
 
  public:
   string_expr(const char *str);
+  void dump_tree() override;
 };
 
 #endif /* EXPRESSION_HPP */

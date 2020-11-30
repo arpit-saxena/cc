@@ -83,6 +83,9 @@ void yyerror(const char *s);
 
 %nterm <initializer_node *> initializer
 %nterm <initializer_lst *> initializer_list
+%nterm <init_decl *> init_declarator
+%nterm <init_decl_list *> init_declarator_list
+%nterm <declaration_node *> declaration
 
 %start translation_unit
 %%
@@ -258,8 +261,8 @@ constant_expression
 	;
 
 declaration
-	: declaration_specifiers ';'
-	| declaration_specifiers init_declarator_list ';'
+	: declaration_specifiers ';' {$$ = new declaration_node($1);}
+	| declaration_specifiers init_declarator_list ';' {$$ = new declaration_node($1, $2);}
 	| static_assert_declaration
 	;
 
@@ -277,13 +280,13 @@ declaration_specifiers
 	;
 
 init_declarator_list
-	: init_declarator
-	| init_declarator_list ',' init_declarator
+	: init_declarator {$$ = (new init_decl_list())->add($1);}
+	| init_declarator_list ',' init_declarator {$$ = $1->add($3);}
 	;
 
 init_declarator
-	: declarator '=' initializer
-	| declarator
+	: declarator '=' initializer {$$ = new init_decl($1, $3);}
+	| declarator {$$ = new init_decl($1);}
 	;
 
 storage_class_specifier
@@ -541,7 +544,7 @@ block_item_list
 	;
 
 block_item
-	: declaration
+	: declaration {$$ = $1;}
 	| statement {$$ = $1;}
 	;
 

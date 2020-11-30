@@ -1,7 +1,5 @@
 #include "statement.hpp"
 
-void blk_item::dump_tree() { cout << "- (block_item)" << endl; }
-
 void stmt_node::dump_tree() { cout << "- (statement)" << endl; }
 
 compound_stmt *compound_stmt::add(blk_item *item) {

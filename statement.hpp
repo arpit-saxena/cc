@@ -4,13 +4,8 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "block_item.hpp"
 #include "expression.hpp"
-
-// TODO: Maybe move this into separate file when we add declaration too
-class blk_item : public ast_node {
- public:
-  virtual void dump_tree() override;
-};
 
 class stmt_node : public blk_item {
  public:

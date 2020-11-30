@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "ast.hpp"
+#include "block_item.hpp"
+#include "declarator.hpp"
 #include "expression.hpp"
 
 class initializer_node : public ast_node {};
@@ -23,6 +25,32 @@ class initializer_lst : public initializer_node {
 
  public:
   initializer_lst *add(initializer_node *init);
+};
+
+class init_decl : public ast_node {
+  declarator_node *declarator;
+  initializer_node *initializer;  // Optional
+
+ public:
+  init_decl(declarator_node *declarator,
+            initializer_node *initializer = nullptr);
+};
+
+class init_decl_list : public ast_node {
+  std::vector<init_decl *> declarators;
+
+ public:
+  init_decl_list *add(init_decl *declarator);
+};
+
+// Ignoring static_assert_declaration
+class declaration_node : public blk_item {
+  declaration_specs *specs;
+  init_decl_list *decl_list;  // Optional
+
+ public:
+  declaration_node(declaration_specs *specs,
+                   init_decl_list *decl_list = nullptr);
 };
 
 #endif /* DECLARATION_HPP */

@@ -1,7 +1,8 @@
 ENTRY=2018MT10742
+LLVM_FLAGS=$$(llvm-config --cxxflags --ldflags --libs core)
 
 cc: c.tab.cpp c.tab.hpp c.lex.cpp *.cpp *.hpp 
-	g++ *.cpp -std=c++17 -lm -lfl -o $@ -g
+	g++ *.cpp -lm -lfl $(LLVM_FLAGS) -o $@ -g
 
 c.tab.cpp c.tab.hpp: c.y
 	bison -o c.tab.cpp -d c.y

@@ -1,6 +1,8 @@
 #ifndef DECL_COMMON_HPP
 #define DECL_COMMON_HPP
 
+#include <llvm/IR/Type.h>
+
 #include <set>
 
 #include "ast.hpp"
@@ -85,6 +87,7 @@ class type_specifiers : public ast_node {
   type get_specs();
   void dump_tree() override;
   std::string to_string();
+  llvm::Type* get_type();
 };
 
 /*
@@ -112,6 +115,7 @@ class pointer_node : public ast_node {
  public:
   pointer_node* add(type_qualifiers* quals);
   void dump_tree() override;
+  llvm::PointerType* get_type(llvm::Type* type);
 };
 
 class declaration_specs : public ast_node {
@@ -125,6 +129,7 @@ class declaration_specs : public ast_node {
   declaration_specs* add(type_specifiers::type type_spec);
   declaration_specs* add(type_qualifiers::qualifier type_qual);
   void dump_tree() override;
+  llvm::Type* get_type();
 };
 
 #endif /* DECL_COMMON_HPP */

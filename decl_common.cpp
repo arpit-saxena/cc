@@ -247,6 +247,44 @@ std::string type_specifiers::to_string() {
   return "unknown";
 }
 
+/*
+ * Using https://en.cppreference.com/w/c/language/arithmetic_types as reference
+ */
+llvm::Type *type_specifiers::get_type() {
+  switch (specs) {
+    case VOID:
+      return llvm::Type::getVoidTy(the_context);
+    case CHAR:
+    case SCHAR:
+    case UCHAR:
+      return llvm::Type::getInt8Ty(the_context);
+    case SHORT:
+    case USHORT:
+      return llvm::Type::getInt16Ty(the_context);
+    case INT:
+    case UINT:
+    case LONG:
+    case ULONG:
+      return llvm::Type::getInt32Ty(the_context);
+    case LONG_LONG:
+    case ULONG_LONG:
+      return llvm::Type::getInt64Ty(the_context);
+    case FLOAT:
+      return llvm::Type::getFloatTy(the_context);
+    case DOUBLE:
+      return llvm::Type::getDoubleTy(the_context);
+    case LONG_DOUBLE:
+      return llvm::Type::getFP128Ty(the_context);  // Not sure what to use here
+    case BOOL:
+      // A _Bool could be i1 but the spec wants alignment requirement to be
+      // atleast as strict as that of char and I can't find any reference for
+      // the alignment of i1
+      return llvm::Type::getInt8Ty(the_context);
+  }
+  raise_error("Cannot be converted to llvm Type. Either not set or incomplete");
+  return nullptr;
+}
+
 type_qualifiers *type_qualifiers::add_qual(type_qualifiers::qualifier qual) {
   // Section 6.7.3, point 5: "If the same qualifier appears more than once
   // in the samespecifier-qualifier-list, either directly or via one or
@@ -297,6 +335,14 @@ void pointer_node::dump_tree() {
   cout.unindent();
 }
 
+llvm::PointerType *pointer_node::get_type(llvm::Type *type) {
+  llvm::Type *ret = type;
+  for (auto &qual : quals) {
+    ret = ret->getPointerTo();
+  }
+  return static_cast<llvm::PointerType *>(ret);
+}
+
 declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {
   this->storage_spec.add_spec(spec);
   return this;
@@ -320,3 +366,5 @@ void declaration_specs::dump_tree() {
   type_qual.dump_tree();
   cout.unindent();
 }
+
+llvm::Type *declaration_specs::get_type() { return type_spec.get_type(); }

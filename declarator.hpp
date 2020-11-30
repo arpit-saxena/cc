@@ -1,6 +1,8 @@
 #ifndef DECLARATOR_HPP
 #define DECLARATOR_HPP
 
+#include <llvm/IR/Type.h>
+
 #include <vector>
 
 #include "ast.hpp"
@@ -50,6 +52,7 @@ class param_declaration : public ast_node {
   param_declaration(declaration_specs *decl_spec,
                     declarator_node *decl = nullptr);
   void dump_tree() override;
+  llvm::Type *get_type();
 };
 
 class param_list : public ast_node {
@@ -60,6 +63,7 @@ class param_list : public ast_node {
   param_list *add(param_declaration *decl);
   param_list *make_vararg();
   void dump_tree() override;
+  std::vector<llvm::Type *> get_types();
 };
 
 class function_declarator : public direct_decl {

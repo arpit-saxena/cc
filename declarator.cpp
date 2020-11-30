@@ -49,6 +49,8 @@ void param_declaration::dump_tree() {
   cout.unindent();
 }
 
+llvm::Type *param_declaration::get_type() { return decl_spec->get_type(); }
+
 param_list *param_list::add(param_declaration *decl) {
   param_decls.push_back(decl);
   return this;
@@ -69,6 +71,14 @@ void param_list::dump_tree() {
     cout << "- varargs" << endl;
   }
   cout.unindent();
+}
+
+std::vector<llvm::Type *> param_list::get_types() {
+  std::vector<llvm::Type *> ret(param_decls.size());
+  for (int i = 0; i < param_decls.size(); i++) {
+    ret[i] = param_decls[i]->get_type();
+  }
+  return ret;
 }
 
 function_declarator::function_declarator(direct_decl *decl,

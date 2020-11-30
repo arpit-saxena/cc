@@ -1,6 +1,8 @@
 #ifndef AST_HPP
 #define AST_HPP
 
+#include <llvm/IR/Module.h>
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -10,6 +12,8 @@
 class ast_node {
  protected:
   static printer cout;
+  static llvm::LLVMContext the_context;
+  static std::unique_ptr<llvm::Module> the_module;
 
  public:
   virtual void dump_tree();

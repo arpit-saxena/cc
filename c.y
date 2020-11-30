@@ -18,6 +18,7 @@ void yyerror(const char *s);
 	#include "statement.hpp"
 	#include "func_def.hpp"
 	#include "expression.hpp"
+	#include "declaration.hpp"
 }
 
 %define api.value.type union
@@ -79,6 +80,9 @@ void yyerror(const char *s);
 %nterm <cond_expr *> conditional_expression
 %nterm <assign_expr *> assignment_expression
 %nterm <expr *> expression
+
+%nterm <initializer_node *> initializer
+%nterm <initializer_lst *> initializer_list
 
 %start translation_unit
 %%
@@ -481,16 +485,16 @@ direct_abstract_declarator
 	;
 
 initializer
-	: '{' initializer_list '}'
-	| '{' initializer_list ',' '}'
-	| assignment_expression
+	: '{' initializer_list '}' {$$ = $2;}
+	| '{' initializer_list ',' '}' {$$ = $2;}
+	| assignment_expression {$$ = new init_assign_expr($1);}
 	;
 
 initializer_list
 	: designation initializer
-	| initializer
+	| initializer {$$ = (new initializer_lst())->add($1);}
 	| initializer_list ',' designation initializer
-	| initializer_list ',' initializer
+	| initializer_list ',' initializer {$$ = $1->add($3);}
 	;
 
 designation

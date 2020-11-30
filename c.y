@@ -62,6 +62,7 @@ void yyerror(const char *s);
 
 %nterm <primary_expr *> primary_expression
 %nterm <const_expr *> constant
+%nterm <string_expr *> string
 %nterm <postfix_expr *> postfix_expression
 %nterm <unary_expr *> unary_expression
 %nterm <cast_expr *> cast_expression
@@ -93,7 +94,7 @@ void yyerror(const char *s);
 primary_expression
 	: IDENTIFIER {$$ = new ident_expr($1);}
 	| constant {$$ = $1;}
-	| string
+	| string {$$ = $1;}
 	| '(' expression ')' {$$ = new paren_expr($2);}
 	| generic_selection
 	;
@@ -109,7 +110,7 @@ enumeration_constant		/* before it has been defined as such */
 	;
 
 string
-	: STRING_LITERAL
+	: STRING_LITERAL {$$ = new string_expr($1);}
 	| FUNC_NAME
 	;
 

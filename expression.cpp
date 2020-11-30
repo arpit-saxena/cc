@@ -66,6 +66,10 @@ void ident_expr::dump_tree() {
   cout << "- (identifier) " << identifier << endl;
 }
 
+paren_expr::paren_expr(expr *expression) { this->expression = expression; }
+
+void paren_expr::dump_tree() { expression->dump_tree(); }
+
 int_constant_expr::int_constant_expr(const char *num_str) {
   this->num_str = num_str;
 }
@@ -74,6 +78,4 @@ void int_constant_expr::dump_tree() {
   cout << "- (constant) " << num_str << endl;
 }
 
-paren_expr::paren_expr(expr *expression) { this->expression = expression; }
-
-void paren_expr::dump_tree() { expression->dump_tree(); }
+string_expr::string_expr(const char *str) : str(str) { free((void *)str); }

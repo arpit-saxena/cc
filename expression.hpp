@@ -92,4 +92,11 @@ class int_constant_expr : public const_expr {
   void dump_tree() override;
 };
 
+class string_expr : public primary_expr {
+  const std::string str;
+
+ public:
+  string_expr(const char *str);
+};
+
 #endif /* EXPRESSION_HPP */

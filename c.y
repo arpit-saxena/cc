@@ -586,7 +586,7 @@ translation_unit
 
 external_declaration
 	: function_definition {$$ = $1;}
-	| declaration
+	| declaration {$$ = $1;}
 	;
 
 function_definition

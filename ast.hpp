@@ -18,7 +18,7 @@ class ast_node {
   static std::unique_ptr<llvm::Module> the_module;
 
  public:
-  virtual void dump_tree();
+  virtual void dump_tree() = 0;
   static void raise_error(std::string err);
   static ast_node *base;
 };

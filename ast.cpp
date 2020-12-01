@@ -11,8 +11,6 @@ llvm::IRBuilder<> ast_node::ir_builder(the_context);
 std::unique_ptr<llvm::Module> ast_node::the_module =
     std::make_unique<llvm::Module>("module", the_context);
 
-void ast_node::dump_tree() { cout << "- (ast_node)" << endl; }
-
 void ast_node::raise_error(std::string err) {
   std::cerr << "Error: " << err << '\n';
 }

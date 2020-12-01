@@ -7,6 +7,7 @@
 #include "block_item.hpp"
 #include "declarator.hpp"
 #include "expression.hpp"
+#include "func_def.hpp"
 
 class initializer_node : public ast_node {
  public:
@@ -51,7 +52,7 @@ class init_decl_list : public ast_node {
 };
 
 // Ignoring static_assert_declaration
-class declaration_node : public blk_item {
+class declaration_node : public blk_item, public external_decl {
   declaration_specs *specs;
   init_decl_list *decl_list;  // Optional
 

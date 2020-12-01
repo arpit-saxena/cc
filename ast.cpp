@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 
+#include "func_def.hpp"
+
 printer ast_node::cout;
-ast_node *ast_node::base = nullptr;
+trans_unit *ast_node::base = nullptr;
 llvm::LLVMContext ast_node::the_context;
 llvm::IRBuilder<> ast_node::ir_builder(the_context);
 std::unique_ptr<llvm::Module> ast_node::the_module =

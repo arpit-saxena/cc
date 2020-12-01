@@ -8,7 +8,10 @@
 #include "declarator.hpp"
 #include "statement.hpp"
 
-class external_decl : public ast_node {};
+class external_decl : public ast_node {
+ public:
+  virtual void gencode(){};
+};
 
 class func_def : public external_decl {
   declaration_specs *decl_specs;
@@ -20,7 +23,7 @@ class func_def : public external_decl {
            compound_stmt *statement);
   static void old_style_error();
   void dump_tree() override;
-  llvm::Function *gen_function();
+  void gencode() override;
 };
 
 class trans_unit : public ast_node {
@@ -29,6 +32,7 @@ class trans_unit : public ast_node {
  public:
   trans_unit *add(external_decl *decl);
   void dump_tree() override;
+  void gencode();
 };
 
 #endif /* FUNC_DEF_HPP */

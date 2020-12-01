@@ -23,13 +23,15 @@ void func_def::dump_tree() {
   cout.unindent();
 }
 
-llvm::Function *func_def::gen_function() {
+void func_def::gencode() {
   llvm::Function *func = declarator->gen_function(decl_specs);
   llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
   ir_builder.SetInsertPoint(block);
+  if (decl_specs->get_type()->isVoidTy()) {
+    ir_builder.CreateRetVoid();
+  }
   llvm::verifyFunction(*func);
-  return func;
 }
 
 trans_unit *trans_unit::add(external_decl *decl) {
@@ -44,4 +46,14 @@ void trans_unit::dump_tree() {
     decl->dump_tree();
   }
   cout.unindent();
+}
+
+void trans_unit::gencode() {
+  for (auto decl : external_decls) {
+    decl->gencode();
+  }
+  if (llvm::verifyModule(*the_module, &llvm::errs())) {
+    return;
+  }
+  the_module->print(llvm::errs(), nullptr);
 }

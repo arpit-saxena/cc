@@ -25,6 +25,7 @@ class declarator_node : public direct_decl {
   void dump_tree() override;
   std::string get_identifier() override;
   llvm::Function *gen_function(declaration_specs *specs);
+  llvm::Type *get_type(llvm::Type *type);
 };
 
 class identifier_declarator : public direct_decl {

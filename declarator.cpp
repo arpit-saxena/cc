@@ -30,6 +30,11 @@ llvm::Function *declarator_node::gen_function(declaration_specs *specs) {
   return fn_decl->get_function(ret_type);
 }
 
+llvm::Type *declarator_node::get_type(llvm::Type *type) {
+  if (p) type = p->get_type(type);
+  return type;
+}
+
 identifier_declarator::identifier_declarator(std::string &&identifier) {
   this->identifier = identifier;
 }
@@ -66,7 +71,11 @@ void param_declaration::dump_tree() {
   cout.unindent();
 }
 
-llvm::Type *param_declaration::get_type() { return decl_spec->get_type(); }
+llvm::Type *param_declaration::get_type() {
+  llvm::Type *ret = decl_spec->get_type();
+  if (decl) ret = decl->get_type(ret);
+  return ret;
+}
 
 bool param_declaration::set_arg_name(llvm::Argument *arg) {
   if (!decl) return false;

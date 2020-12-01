@@ -10,6 +10,8 @@
 
 #include "printer.hpp"
 
+class trans_unit;  // Forward declaration
+
 class ast_node {
  protected:
   static printer cout;
@@ -20,7 +22,7 @@ class ast_node {
  public:
   virtual void dump_tree() = 0;
   static void raise_error(std::string err);
-  static ast_node *base;
+  static trans_unit *base;
 };
 
 #endif /* AST_HPP */

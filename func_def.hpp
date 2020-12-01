@@ -1,6 +1,8 @@
 #ifndef FUNC_DEF_HPP
 #define FUNC_DEF_HPP
 
+#include <llvm/IR/Function.h>
+
 #include "ast.hpp"
 #include "decl_common.hpp"
 #include "declarator.hpp"
@@ -18,6 +20,7 @@ class func_def : public external_decl {
            compound_stmt *statement);
   static void old_style_error();
   void dump_tree() override;
+  llvm::Function *gen_function();
 };
 
 class trans_unit : public ast_node {

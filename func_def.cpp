@@ -1,5 +1,8 @@
 #include "func_def.hpp"
 
+#include <llvm/IR/BasicBlock.h>
+#include <llvm/IR/Verifier.h>
+
 func_def::func_def(declaration_specs *decl_specs, declarator_node *declarator,
                    compound_stmt *statement) {
   this->decl_specs = decl_specs;
@@ -18,6 +21,15 @@ void func_def::dump_tree() {
   declarator->dump_tree();
   statement->dump_tree();
   cout.unindent();
+}
+
+llvm::Function *func_def::gen_function() {
+  llvm::Function *func = declarator->gen_function(decl_specs);
+  llvm::BasicBlock *block =
+      llvm::BasicBlock::Create(the_context, "entry", func);
+  ir_builder.SetInsertPoint(block);
+  llvm::verifyFunction(*func);
+  return func;
 }
 
 trans_unit *trans_unit::add(external_decl *decl) {

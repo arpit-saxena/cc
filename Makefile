@@ -1,8 +1,36 @@
-ENTRY=2018MT10742
-LLVM_FLAGS=$$(llvm-config --cxxflags --ldflags --libs core)
+# Part of Makefile taken from https://stackoverflow.com/a/30142139/5585431
 
-cc: c.tab.cpp c.tab.hpp c.lex.cpp *.cpp *.hpp 
-	g++ *.cpp -lm -lfl $(LLVM_FLAGS) -o $@ -g
+ENTRY=2018MT10742
+
+CXX = g++
+CXX_FLAGS = $(shell llvm-config --cxxflags --ldflags --libs core) -lm -lfl
+
+# Final binary
+BIN = cc
+# Put all auto generated stuff to this build dir.
+BUILD_DIR = ./build
+
+# List of all .cpp source files.
+CPP = $(wildcard *.cpp)
+
+# All .o files go to build dir.
+OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
+# Gcc/Clang will create these .d files containing dependencies.
+DEP = $(OBJ:%.o=%.d)
+
+# Actual target of the binary - depends on all .o files.
+$(BIN) : $(OBJ)
+	$(CXX) $(CXX_FLAGS) $^ -o $@
+
+# Include all .d files
+-include $(DEP)
+
+# Build target for every single object file.
+# The potential dependency on header files is covered
+# by calling `-include $(DEP)`.
+$(BUILD_DIR)/%.o : %.cpp
+	@mkdir -p $(@D)
+	$(CXX) $(CXX_FLAGS) -MMD -c $< -o $@
 
 c.tab.cpp c.tab.hpp: c.y
 	bison -o c.tab.cpp -d c.y

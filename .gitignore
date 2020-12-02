@@ -6,3 +6,5 @@ cc
 vgcore*
 2018MT10742.zip
 out
+build/
+test.ll

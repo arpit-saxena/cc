@@ -40,6 +40,7 @@ c.lex.cpp: c.l c.tab.hpp
 
 clean::
 	rm -f c.tab.cpp c.tab.hpp c.lex.cpp cc c.output $(ENTRY).zip
+	rm -rf build
 
 FORCE:
 

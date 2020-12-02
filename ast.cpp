@@ -15,7 +15,7 @@ std::unique_ptr<llvm::Module> ast_node::the_module =
     std::make_unique<llvm::Module>("module", the_context);
 
 void ast_node::print_warning(std::string err) {
-  std::cerr << "Error: " << err << '\n';
+  std::cerr << "Warning: " << err << '\n';
 }
 
 void ast_node::raise_error(std::string err) {

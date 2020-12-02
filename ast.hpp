@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "printer.hpp"
+#include "symbol_table.hpp"
 
 class trans_unit;  // Forward declaration
 
@@ -18,6 +19,7 @@ class ast_node {
   static llvm::LLVMContext the_context;
   static llvm::IRBuilder<> ir_builder;
   static std::unique_ptr<llvm::Module> the_module;
+  static symbol_table sym_table;
 
  public:
   virtual void dump_tree() = 0;

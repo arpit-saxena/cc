@@ -13,6 +13,7 @@ llvm::LLVMContext ast_node::the_context;
 llvm::IRBuilder<> ast_node::ir_builder(the_context);
 std::unique_ptr<llvm::Module> ast_node::the_module =
     std::make_unique<llvm::Module>("module", the_context);
+symbol_table ast_node::sym_table(ir_builder);
 
 void ast_node::print_warning(std::string err) {
   std::cerr << "Warning: " << err << '\n';

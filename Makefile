@@ -3,7 +3,7 @@
 ENTRY=2018MT10742
 
 CXX = g++
-CXX_FLAGS = $(shell llvm-config --cxxflags --ldflags --libs core) -lm -lfl
+CXX_FLAGS = $(shell llvm-config --cxxflags --ldflags --libs core) -g -std=c++17 -lm -lfl
 
 # Final binary
 BIN = cc
@@ -19,8 +19,8 @@ OBJ = $(CPP:%.cpp=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:%.o=%.d)
 
 # Actual target of the binary - depends on all .o files.
-$(BIN) : $(OBJ)
-	$(CXX) $(CXX_FLAGS) $^ -o $@
+$(BIN) : c.tab.cpp c.tab.hpp c.lex.cpp $(OBJ)
+	$(CXX) $(CXX_FLAGS) $(OBJ) -o $@
 
 # Include all .d files
 -include $(DEP)

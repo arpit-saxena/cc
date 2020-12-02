@@ -26,6 +26,6 @@ int main(int argc, char **argv) {
   printf("\n--- AST END ---\n\n");
   printf("Parse retv = %d\n", ret);
   printf("\n--- Generating code ---\n\n");
-  ast_node::base->gencode();
+  ast_node::base->codegen();
   exit(0);
 }

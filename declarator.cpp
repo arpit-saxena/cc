@@ -17,22 +17,14 @@ void declarator_node::dump_tree() {
 
 std::string declarator_node::get_identifier() { return decl->get_identifier(); }
 
-llvm::Function *declarator_node::gen_function(declaration_specs *specs) {
-  llvm::Type *ret_type = specs->get_type();
-  if (p) {
-    ret_type = p->get_type(ret_type);
-  }
-  auto fn_decl = dynamic_cast<function_declarator *>(decl);
-  if (!fn_decl) {
-    print_warning("direct declarator is not a valid function declarator");
-    return nullptr;
-  }
-  return fn_decl->get_function(ret_type);
-}
-
 llvm::Type *declarator_node::get_type(llvm::Type *type) {
   if (p) type = p->get_type(type);
   return type;
+}
+
+void declarator_node::codegen(llvm::Type *type) {
+  if (p) type = p->get_type(type);
+  decl->codegen(type);
 }
 
 identifier_declarator::identifier_declarator(std::string &&identifier) {
@@ -45,6 +37,15 @@ void identifier_declarator::dump_tree() {
 
 std::string identifier_declarator::get_identifier() { return identifier; }
 
+void identifier_declarator::codegen(llvm::Type *type) {
+  if (sym_table.check_top_scope(identifier)) {
+    print_warning("Duplicate variable declaration. Ignoring the new one");
+    return;
+  }
+
+  sym_table.top_scope()->add_var(type, identifier);
+}
+
 array_declarator::array_declarator(direct_decl *decl) {
   this->decl = decl;
   print_warning("Array declarator is not supported. Ignoring some parts!");
@@ -55,6 +56,10 @@ void array_declarator::dump_tree() {
   cout.indent();
   decl->dump_tree();
   cout.unindent();
+}
+
+void array_declarator::codegen(llvm::Type *type) {
+  raise_error("Arrays are not supported yet!");
 }
 
 param_declaration::param_declaration(declaration_specs *decl_spec,
@@ -144,7 +149,7 @@ std::string function_declarator::get_identifier() {
   return decl->get_identifier();
 }
 
-llvm::Function *function_declarator::get_function(llvm::Type *ret_type) {
+void function_declarator::codegen(llvm::Type *ret_type) {
   std::vector<llvm::Type *> param_types;
   if (params) {
     param_types = params->get_types();
@@ -152,13 +157,12 @@ llvm::Function *function_declarator::get_function(llvm::Type *ret_type) {
   llvm::FunctionType *ftype =
       llvm::FunctionType::get(ret_type, param_types, params->is_vararg());
 
-  llvm::Function *function =
-      llvm::Function::Create(ftype, llvm::Function::ExternalLinkage,
-                             decl->get_identifier(), the_module.get());
+  std::string identifier = decl->get_identifier();
+  llvm::Function *function = llvm::Function::Create(
+      ftype, llvm::Function::ExternalLinkage, identifier, the_module.get());
 
   if (params) {
     params->set_arg_names(function->args());
   }
-
-  return function;
+  sym_table.top_scope()->add_func(function, identifier);
 }

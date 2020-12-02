@@ -3,6 +3,8 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Verifier.h>
 
+#include <cassert>
+
 func_def::func_def(declaration_specs *decl_specs, declarator_node *declarator,
                    compound_stmt *statement) {
   this->decl_specs = decl_specs;
@@ -23,8 +25,13 @@ void func_def::dump_tree() {
   cout.unindent();
 }
 
-void func_def::gencode() {
-  llvm::Function *func = declarator->gen_function(decl_specs);
+void func_def::codegen() {
+  declarator->codegen(decl_specs->get_type());
+  std::string identifier = declarator->get_identifier();
+  scope::var_opt func_opt = sym_table.get_var(identifier);
+  assert(func_opt.has_value() &&
+         std::holds_alternative<llvm::Function *>(func_opt.value()));
+  llvm::Function *func = std::get<llvm::Function *>(func_opt.value());
   llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
   ir_builder.SetInsertPoint(block);
@@ -48,9 +55,9 @@ void trans_unit::dump_tree() {
   cout.unindent();
 }
 
-void trans_unit::gencode() {
+void trans_unit::codegen() {
   for (auto decl : external_decls) {
-    decl->gencode();
+    decl->codegen();
   }
   if (llvm::verifyModule(*the_module, &llvm::errs())) {
     return;

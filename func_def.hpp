@@ -10,7 +10,7 @@
 
 class external_decl : public ast_node {
  public:
-  virtual void gencode(){};
+  virtual void codegen(){};
 };
 
 class func_def : public external_decl {
@@ -23,7 +23,7 @@ class func_def : public external_decl {
            compound_stmt *statement);
   static void old_style_error();
   void dump_tree() override;
-  void gencode() override;
+  void codegen() override;
 };
 
 class trans_unit : public ast_node {
@@ -32,7 +32,7 @@ class trans_unit : public ast_node {
  public:
   trans_unit *add(external_decl *decl);
   void dump_tree() override;
-  void gencode();
+  void codegen();
 };
 
 #endif /* FUNC_DEF_HPP */

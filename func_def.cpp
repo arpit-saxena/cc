@@ -11,7 +11,7 @@ func_def::func_def(declaration_specs *decl_specs, declarator_node *declarator,
 }
 
 void func_def::old_style_error() {
-  raise_error("Old-style (K&R) function definition is not supported.");
+  print_warning("Old-style (K&R) function definition is not supported.");
 }
 
 void func_def::dump_tree() {

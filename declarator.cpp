@@ -24,7 +24,7 @@ llvm::Function *declarator_node::gen_function(declaration_specs *specs) {
   }
   auto fn_decl = dynamic_cast<function_declarator *>(decl);
   if (!fn_decl) {
-    raise_error("direct declarator is not a valid function declarator");
+    print_warning("direct declarator is not a valid function declarator");
     return nullptr;
   }
   return fn_decl->get_function(ret_type);
@@ -47,7 +47,7 @@ std::string identifier_declarator::get_identifier() { return identifier; }
 
 array_declarator::array_declarator(direct_decl *decl) {
   this->decl = decl;
-  raise_error("Array declarator is not supported. Ignoring some parts!");
+  print_warning("Array declarator is not supported. Ignoring some parts!");
 }
 
 void array_declarator::dump_tree() {
@@ -129,7 +129,7 @@ function_declarator::function_declarator(direct_decl *decl,
 }
 
 void function_declarator::old_style_error() {
-  raise_error("Old style (K&R) function definition is not supported");
+  print_warning("Old style (K&R) function definition is not supported");
 }
 
 void function_declarator::dump_tree() {

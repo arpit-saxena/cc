@@ -6,7 +6,7 @@ storage_specifiers::storage_specifiers(storage spec) { this->spec = spec; }
 
 storage_specifiers *storage_specifiers::add_spec(storage spec) {
   if (this->spec != UNSET) {
-    raise_error("Only one storage specifier is allowed. Taking the new one!");
+    print_warning("Only one storage specifier is allowed. Taking the new one!");
   }
 
   this->spec = spec;
@@ -193,7 +193,7 @@ type_specifiers *type_specifiers::add_spec(type spec) {
       }
   }
 
-  raise_error("Undefined type given to type_specifiers::add_spec");
+  print_warning("Undefined type given to type_specifiers::add_spec");
   return this;
 }
 
@@ -281,7 +281,8 @@ llvm::Type *type_specifiers::get_type() {
       // the alignment of i1
       return llvm::Type::getInt8Ty(the_context);
   }
-  raise_error("Cannot be converted to llvm Type. Either not set or incomplete");
+  print_warning(
+      "Cannot be converted to llvm Type. Either not set or incomplete");
   return nullptr;
 }
 

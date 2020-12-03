@@ -79,6 +79,8 @@ class param_declaration : public ast_node {
   llvm::Type *get_type();
   // returns true if a name was set, false otherwise
   bool set_arg_name(llvm::Argument *arg);
+  // Add mapping of identifier (if present) to given value in symbol table
+  void add_arg_table(llvm::Value *value);
 };
 
 class param_list : public ast_node {
@@ -93,11 +95,14 @@ class param_list : public ast_node {
   bool is_vararg();
   // Set names of arguments if present
   void set_arg_names(llvm::iterator_range<llvm::Argument *> args);
+  // Add args mapping to top scope of symbol table
+  void add_args_table(std::vector<llvm::Value *> values);
 };
 
 class function_declarator : public direct_decl {
   direct_decl *decl;
   param_list *params;  // Optional
+  llvm::Function *codegen_common(llvm::Type *ret_type);
 
  public:
   function_declarator(direct_decl *decl, param_list *params = nullptr);
@@ -105,7 +110,11 @@ class function_declarator : public direct_decl {
   void dump_tree() override;
   std::string get_identifier() override;
   virtual function_declarator *get_func_decl() override { return this; }
-  void codegen(llvm::Type *ret_type);
+
+  // Generates the code for function definition. This would generate a function
+  // and the corresponding arguments, and push them onto the symbol table in a
+  // function scope
+  llvm::Function *codegen_def(llvm::Type *ret_type);
 };
 
 #endif /* DECLARATOR_HPP */

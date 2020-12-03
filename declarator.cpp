@@ -88,6 +88,12 @@ bool param_declaration::set_arg_name(llvm::Argument *arg) {
   return true;
 }
 
+void param_declaration::add_arg_table(llvm::Value *value) {
+  if (!decl) return;
+  std::string identifier = decl->get_identifier();
+  sym_table.top_scope()->add_val(value, identifier);
+}
+
 param_list *param_list::add(param_declaration *decl) {
   param_decls.push_back(decl);
   return this;
@@ -127,6 +133,16 @@ void param_list::set_arg_names(llvm::iterator_range<llvm::Argument *> args) {
   }
 }
 
+void param_list::add_args_table(std::vector<llvm::Value *> values) {
+  if (values.size() != param_decls.size()) {
+    raise_error("Number of values given does not match number of parameters");
+  }
+  int i = 0;
+  for (auto val : values) {
+    param_decls[i++]->add_arg_table(val);
+  }
+}
+
 function_declarator::function_declarator(direct_decl *decl,
                                          param_list *params) {
   this->decl = decl;
@@ -149,7 +165,7 @@ std::string function_declarator::get_identifier() {
   return decl->get_identifier();
 }
 
-void function_declarator::codegen(llvm::Type *ret_type) {
+llvm::Function *function_declarator::codegen_common(llvm::Type *ret_type) {
   std::vector<llvm::Type *> param_types;
   bool is_vararg = false;
   if (params) {
@@ -167,4 +183,22 @@ void function_declarator::codegen(llvm::Type *ret_type) {
     params->set_arg_names(function->args());
   }
   sym_table.top_scope()->add_func(function, identifier);
+  return function;
+}
+
+llvm::Function *function_declarator::codegen_def(llvm::Type *ret_type) {
+  llvm::Function *func = codegen_common(ret_type);
+  llvm::BasicBlock *block =
+      llvm::BasicBlock::Create(the_context, "entry", func);
+  ir_builder.SetInsertPoint(block);
+  sym_table.change_func(func);
+  sym_table.add_scope();
+  if (params) {
+    std::vector<llvm::Value *> args;
+    for (auto &arg : func->args()) {
+      args.push_back(&arg);
+    }
+    params->add_args_table(args);
+  }
+  return func;
 }

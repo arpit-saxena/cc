@@ -11,6 +11,11 @@ llvm::Function *scope::add_func(llvm::Function *func, std::string name) {
   return func;
 }
 
+llvm::Value *scope::add_val(llvm::Value *val, std::string name) {
+  variables[name] = val;
+  return val;
+}
+
 bool scope::check_var(std::string name) { return variables.count(name) > 0; }
 
 llvm::Value *scope::get_var(std::string name) {

@@ -18,6 +18,7 @@ class scope {
   scope(llvm::IRBuilder<> &builder) : builder(builder){};
   llvm::AllocaInst *add_var(llvm::Type *type, std::string name);
   llvm::Function *add_func(llvm::Function *func, std::string name);
+  llvm::Value *add_val(llvm::Value *val, std::string name);
   bool check_var(std::string name);
   llvm::Value *get_var(std::string name);
 };

@@ -91,7 +91,8 @@ bool param_declaration::set_arg_name(llvm::Argument *arg) {
 void param_declaration::add_arg_table(llvm::Value *value) {
   if (!decl) return;
   std::string identifier = decl->get_identifier();
-  sym_table.top_scope()->add_val(value, identifier);
+  auto alloca = sym_table.top_scope()->add_var(value->getType(), identifier);
+  ir_builder.CreateStore(value, alloca);
 }
 
 param_list *param_list::add(param_declaration *decl) {

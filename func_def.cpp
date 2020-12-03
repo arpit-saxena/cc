@@ -32,10 +32,13 @@ void func_def::dump_tree() {
 void func_def::codegen() {
   declarator->codegen(decl_specs->get_type());
   std::string identifier = declarator->get_identifier();
-  scope::var_opt func_opt = sym_table.get_var(identifier);
-  assert(func_opt.has_value() &&
-         std::holds_alternative<llvm::Function *>(func_opt.value()));
-  llvm::Function *func = std::get<llvm::Function *>(func_opt.value());
+  llvm::Value *func_opt = sym_table.get_var(identifier);
+
+  llvm::Function *func = llvm::dyn_cast_or_null<llvm::Function>(func_opt);
+  if (!func) {
+    raise_error("The identifier does not represent a function");
+  }
+
   llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
   ir_builder.SetInsertPoint(block);

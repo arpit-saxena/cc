@@ -5,19 +5,13 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Instructions.h>
 
-#include <optional>
 #include <string>
 #include <unordered_map>
-#include <variant>
 #include <vector>
 
 class scope {
- public:
-  typedef std::variant<llvm::AllocaInst *, llvm::Function *> var_t;
-  typedef std::optional<var_t> var_opt;
-
  private:
-  std::unordered_map<std::string, var_t> variables;
+  std::unordered_map<std::string, llvm::Value *> variables;
   llvm::IRBuilder<> &builder;
 
  public:
@@ -25,7 +19,7 @@ class scope {
   llvm::AllocaInst *add_var(llvm::Type *type, std::string name);
   llvm::Function *add_func(llvm::Function *func, std::string name);
   bool check_var(std::string name);
-  var_opt get_var(std::string name);
+  llvm::Value *get_var(std::string name);
 };
 
 class symbol_table {
@@ -43,7 +37,7 @@ class symbol_table {
   bool check_top_scope(std::string name);
 
   // Searches all scopes from top to bottom for variable defined by name.
-  scope::var_opt get_var(std::string name);
+  llvm::Value *get_var(std::string name);
 };
 
 #endif /* SYMBOL_TABLE_HPP */

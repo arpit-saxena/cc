@@ -13,7 +13,7 @@ llvm::Function *scope::add_func(llvm::Function *func, std::string name) {
 
 bool scope::check_var(std::string name) { return variables.count(name) > 0; }
 
-scope::var_opt scope::get_var(std::string name) {
+llvm::Value *scope::get_var(std::string name) {
   auto it = variables.find(name);
   if (it == variables.end()) {
     return {};
@@ -40,10 +40,10 @@ bool symbol_table::check_top_scope(std::string name) {
   return scopes.back().check_var(name);
 }
 
-scope::var_opt symbol_table::get_var(std::string name) {
+llvm::Value *symbol_table::get_var(std::string name) {
   for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
     auto ins = it->get_var(name);
     if (ins) return ins;
   }
-  return {};
+  return nullptr;
 }

@@ -263,8 +263,9 @@ paren_expr::paren_expr(expr *expression) { this->expression = expression; }
 
 void paren_expr::dump_tree() { expression->dump_tree(); }
 
-const_expr::const_expr(llvm::Constant *data, std::string str) {
+const_expr::const_expr(llvm::Constant *data, bool is_signed, std::string str) {
   this->data = data;
+  this->is_signed = is_signed;
   this->str = str;
 }
 
@@ -272,7 +273,9 @@ const_expr::const_expr(llvm::Constant *data, std::string str) {
 // into a value and the corresponding type.
 // See https://clang.llvm.org/doxygen/LiteralSupport_8cpp_source.html#l00526 for
 // clang's implementation
-std::pair<llvm::APInt, llvm::Type *> const_expr::get_int(std::string str) {
+const_expr *const_expr::new_int_expr(const char *s) {
+  std::string str(s);
+  free((void *)s);
   std::transform(str.begin(), str.end(), str.begin(),
                  [](unsigned char c) { return std::toupper(c); });
 
@@ -286,7 +289,9 @@ std::pair<llvm::APInt, llvm::Type *> const_expr::get_int(std::string str) {
 
     type.add_spec(type_specifiers::CHAR);
     char c = str[1];  // TODO: Add support for escape sequences etc
-    return {llvm::APInt(8, c), type.get_type()};
+    llvm::APInt int_val = llvm::APInt(8, c);
+    return new const_expr(llvm::ConstantInt::get(type.get_type(), int_val),
+                          false, str);
   }
 
   int start = 0, end = str.length() - 1;
@@ -345,19 +350,20 @@ std::pair<llvm::APInt, llvm::Type *> const_expr::get_int(std::string str) {
   // Not exactly as the spec wants since in the spec a literal with no suffix
   // can also have a type long long if it can't be represented by the int type
   // See 6.4.4.1/5
-  return {
-      llvm::APInt(num_bits, str.substr(start, end - start + 1), !is_unsigned),
-      type.get_type()};
-}
-
-const_expr *const_expr::new_int_expr(const char *s) {
-  std::string str(s);
-  free((void *)s);
-  auto [int_val, type] = get_int(str);
-  return new const_expr(llvm::ConstantInt::get(type, int_val), str);
+  llvm::APInt int_val =
+      llvm::APInt(num_bits, str.substr(start, end - start + 1), !is_unsigned);
+  return new const_expr(llvm::ConstantInt::get(type.get_type(), int_val),
+                        !is_unsigned, str);
 }
 
 void const_expr::dump_tree() { cout << "- (constant) " << str << endl; }
+
+value const_expr::codegen() {
+  value ret_val;
+  ret_val.llvm_val = data;
+  ret_val.is_signed = is_signed;
+  return ret_val;
+}
 
 string_expr::string_expr(const char *str) : str(str) { free((void *)str); }
 

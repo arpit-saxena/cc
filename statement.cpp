@@ -21,6 +21,12 @@ void compound_stmt::dump_tree() {
   cout.unindent();
 }
 
+void compound_stmt::codegen() {
+  for (auto *item : block_items) {
+    item->codegen();
+  }
+}
+
 expression_stmt::expression_stmt(expr *expression) {
   this->expression = expression;
 }
@@ -35,6 +41,10 @@ void expression_stmt::dump_tree() {
   cout.indent();
   expression->dump_tree();
   cout.unindent();
+}
+
+void expression_stmt::codegen() {
+  if (expression) expression->codegen();
 }
 
 void jump_stmt::dump_tree() { cout << "- (jump_statement)" << endl; }

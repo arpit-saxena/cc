@@ -8,6 +8,7 @@
 class blk_item : public ast_node {
  public:
   virtual void dump_tree() override;
+  virtual void codegen() = 0;
 };
 
 #endif /* BLOCK_ITEM_HPP */

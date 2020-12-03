@@ -10,6 +10,9 @@
 class stmt_node : public blk_item {
  public:
   virtual void dump_tree() override;
+  virtual void codegen() override {
+    raise_error("codegen not implemented for this expression");
+  }  // TODO: Make pure virtual
 };
 
 class labeled_stmt : public stmt_node {};
@@ -20,6 +23,7 @@ class compound_stmt : public stmt_node {
  public:
   compound_stmt *add(blk_item *item);
   void dump_tree() override;
+  virtual void codegen() override;
 };
 
 class expression_stmt : public stmt_node {
@@ -28,6 +32,7 @@ class expression_stmt : public stmt_node {
  public:
   expression_stmt(expr *expression = nullptr);
   void dump_tree() override;
+  void codegen() override;
 };
 
 class selection_stmt : public stmt_node {};

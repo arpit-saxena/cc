@@ -60,6 +60,9 @@ class declaration_node : public blk_item, public external_decl {
   declaration_node(declaration_specs *specs,
                    init_decl_list *decl_list = nullptr);
   void dump_tree() override;
+  virtual void codegen() override {
+    raise_error("codegen not defined for declaration");
+  }
 };
 
 #endif /* DECLARATION_HPP */

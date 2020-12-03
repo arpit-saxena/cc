@@ -35,6 +35,7 @@ void func_def::codegen() {
   llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
   ir_builder.SetInsertPoint(block);
+  statement->codegen();
   if (decl_specs->get_type()->isVoidTy()) {
     ir_builder.CreateRetVoid();
   }

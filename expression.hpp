@@ -126,13 +126,14 @@ class paren_expr : public primary_expr {
 class const_expr : public primary_expr {
   llvm::Constant *data;
   std::string str;
+  bool is_signed;
 
  public:
-  const_expr(llvm::Constant *data, std::string str);
-  static std::pair<llvm::APInt, llvm::Type *> get_int(std::string str);
+  const_expr(llvm::Constant *data, bool is_signed, std::string str);
   // includes character literals
   static const_expr *new_int_expr(const char *str);
   void dump_tree() override;
+  value codegen() override;
 };
 
 class string_expr : public primary_expr {

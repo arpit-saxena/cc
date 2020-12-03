@@ -81,6 +81,7 @@ class binary_expr_ops : public binary_expr {
   static std::string op_string(OP op);
   virtual void dump_tree() override;
   value codegen() override;
+  static value codegen(value left, OP op, value right);
 };
 
 class cast_expr : public binary_expr {};

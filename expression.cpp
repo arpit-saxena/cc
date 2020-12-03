@@ -198,6 +198,10 @@ llvm::CmpInst::Predicate binary_expr_ops::get_cmp_pred(value lhs, value rhs,
 value binary_expr_ops::codegen() {
   value lhs = left_expr->codegen();
   value rhs = right_expr->codegen();
+  return codegen(lhs, op, rhs);
+}
+
+value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
   gen_common_type(lhs, rhs);
   value ret_val;
   ret_val.is_signed = lhs.is_signed && rhs.is_signed;

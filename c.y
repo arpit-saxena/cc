@@ -102,7 +102,7 @@ primary_expression
 	;
 
 constant
-	: I_CONSTANT {$$ = new int_constant_expr($1);}		/* includes character_constant */
+	: I_CONSTANT {$$ = const_expr::new_int_expr($1);}		/* includes character_constant */
 	| F_CONSTANT
 	| ENUMERATION_CONSTANT	/* after it has been defined as such */
 	;

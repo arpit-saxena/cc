@@ -9,6 +9,17 @@
 #include "ast.hpp"
 
 /*
+ * The frontend needs to maintain more data for a value than a llvm::Value holds
+ * such as the signedness, since it determines which instructions to emit.
+ * This struct is a wrapper of llvm::Value and any other extra data that is to
+ * be maintained
+ */
+struct value {
+  llvm::Value *llvm_val;
+  bool is_signed = false;
+};
+
+/*
  * There is a class hierarchy of empty classes denoting a particular kind of
  * expression And for a class actually representing that kind of expression, the
  * class is derived from that expression with "_ops" appended, meaning the
@@ -22,7 +33,7 @@
 
 class expr : public ast_node {
  public:
-  virtual llvm::Value *codegen() {
+  virtual value codegen() {
     raise_error("codegen not implemented for this expression!");
   };  // TODO: Make this pure virtual
 };
@@ -61,12 +72,15 @@ class binary_expr_ops : public binary_expr {
   binary_expr *left_expr;
   OP op;
   binary_expr *right_expr;
+  static llvm::Instruction::BinaryOps get_arith_op(value lhs, value rhs, OP op);
+  static llvm::CmpInst::Predicate get_cmp_pred(value lhs, value rhs, OP op);
+  static void gen_common_type(value lhs, value rhs);
 
  public:
   binary_expr_ops(binary_expr *left, OP op, binary_expr *right);
   static std::string op_string(OP op);
   virtual void dump_tree() override;
-  llvm::Value *codegen() override;
+  value codegen() override;
 };
 
 class cast_expr : public binary_expr {};
@@ -111,22 +125,13 @@ class paren_expr : public primary_expr {
 
 class const_expr : public primary_expr {
   llvm::Constant *data;
+  std::string str;
 
  public:
-  const_expr(llvm::Constant *data);
+  const_expr(llvm::Constant *data, std::string str);
   static std::pair<llvm::APInt, llvm::Type *> get_int(std::string str);
   // includes character literals
   static const_expr *new_int_expr(const char *str);
-  void dump_tree() override{};
-};
-
-// Includes character and integer constants
-// TODO: Figure out how to separate them, and parse as char/int
-class int_constant_expr : public const_expr {
-  std::string num_str;
-
- public:
-  int_constant_expr(const char *id);
   void dump_tree() override;
 };
 

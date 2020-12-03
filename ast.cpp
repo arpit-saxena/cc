@@ -19,7 +19,7 @@ void ast_node::print_warning(std::string err) {
   std::cerr << "Warning: " << err << '\n';
 }
 
-void ast_node::raise_error(std::string err) {
+void ast_node::raise_error [[noreturn]] (std::string err) {
   std::cerr << "Error: " << err << '\n';
   std::exit(1);
 }

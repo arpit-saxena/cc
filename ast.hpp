@@ -24,7 +24,7 @@ class ast_node {
  public:
   virtual void dump_tree() = 0;
   static void print_warning(std::string err);
-  static void raise_error(std::string err);
+  static void raise_error [[noreturn]] (std::string err);
   static trans_unit *base;
 };
 

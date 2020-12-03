@@ -6,6 +6,12 @@
 
 #include "decl_common.hpp"
 
+void expr::convert_to_bool(llvm::Value *&val) {
+  val = ir_builder.CreateICmpEQ(val, const_expr::get_val(0).llvm_val);
+  val = ir_builder.CreateZExtOrBitCast(val,
+                                       llvm::IntegerType::get(the_context, 32));
+}
+
 binary_expr_ops::binary_expr_ops(binary_expr *left, OP op, binary_expr *right) {
   this->left_expr = left;
   this->op = op;
@@ -95,11 +101,11 @@ void binary_expr_ops::gen_common_type(value lhs, value rhs) {
     }
 
     if (is_signed) {
-      val.llvm_val = ir_builder.CreateSExtOrBitCast(val.llvm_val, dest_type,
-                                                    "sign extension cast");
+      val.llvm_val =
+          ir_builder.CreateSExtOrBitCast(val.llvm_val, dest_type, "conv");
     } else {
-      val.llvm_val = ir_builder.CreateZExtOrBitCast(val.llvm_val, dest_type,
-                                                    "zero extension cast");
+      val.llvm_val =
+          ir_builder.CreateZExtOrBitCast(val.llvm_val, dest_type, "conv");
     }
   }
 }
@@ -141,26 +147,13 @@ llvm::Instruction::BinaryOps binary_expr_ops::get_arith_op(
     case BIT_XOR:
       return llvmOP::Xor;
     case AND:
-      lhs.llvm_val = ir_builder.CreateICmpEQ(lhs.llvm_val,
-                                             const_expr::get_val(0).llvm_val);
-      lhs.llvm_val = ir_builder.CreateZExtOrBitCast(lhs.llvm_val, common_type,
-                                                    "zero extension cast");
-      rhs.llvm_val = ir_builder.CreateICmpEQ(rhs.llvm_val,
-                                             const_expr::get_val(0).llvm_val);
-      rhs.llvm_val = ir_builder.CreateZExtOrBitCast(rhs.llvm_val, common_type,
-                                                    "zero extension cast");
-      gen_common_type(lhs, rhs);
+      convert_to_bool(lhs.llvm_val);
+      convert_to_bool(rhs.llvm_val);
     case BIT_AND:
       return llvmOP::And;
     case OR:
-      lhs.llvm_val = ir_builder.CreateICmpEQ(lhs.llvm_val,
-                                             const_expr::get_val(0).llvm_val);
-      lhs.llvm_val = ir_builder.CreateZExtOrBitCast(lhs.llvm_val, common_type,
-                                                    "zero extension cast");
-      rhs.llvm_val = ir_builder.CreateICmpEQ(rhs.llvm_val,
-                                             const_expr::get_val(0).llvm_val);
-      rhs.llvm_val = ir_builder.CreateZExtOrBitCast(rhs.llvm_val, common_type,
-                                                    "zero extension cast");
+      convert_to_bool(lhs.llvm_val);
+      convert_to_bool(rhs.llvm_val);
     case BIT_OR:
       return llvmOP::Or;
   }
@@ -227,15 +220,15 @@ value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
     case NE: {
       llvm::CmpInst::Predicate pred = get_cmp_pred(lhs, rhs, op);
       ret_val.llvm_val =
-          ir_builder.CreateICmp(pred, lhs.llvm_val, rhs.llvm_val, "comparison");
-      ret_val.llvm_val = ir_builder.CreateZExtOrBitCast(
-          ret_val.llvm_val, common_type, "zero extension cast");
+          ir_builder.CreateICmp(pred, lhs.llvm_val, rhs.llvm_val);
+      ret_val.llvm_val =
+          ir_builder.CreateZExtOrBitCast(ret_val.llvm_val, common_type);
       break;
     }
     default: {
       llvm::Instruction::BinaryOps llvm_op = get_arith_op(lhs, rhs, op);
-      ret_val.llvm_val = ir_builder.CreateBinOp(
-          llvm_op, lhs.llvm_val, rhs.llvm_val, "Arithmetic operation");
+      ret_val.llvm_val =
+          ir_builder.CreateBinOp(llvm_op, lhs.llvm_val, rhs.llvm_val);
     }
   }
 
@@ -338,7 +331,7 @@ value ident_expr::codegen() {
   if (!val.llvm_val) {
     raise_error("use of identifier before declaration");
   }
-  val.llvm_val = ir_builder.CreateLoad(val.llvm_val, "load");
+  val.llvm_val = ir_builder.CreateLoad(val.llvm_val, identifier);
   return val;
 }
 

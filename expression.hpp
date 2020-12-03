@@ -25,6 +25,7 @@ class expr : public ast_node {
   virtual value codegen() {
     raise_error("codegen not implemented for this expression!");
   };  // TODO: Make this pure virtual
+  static void convert_to_bool(llvm::Value *&val);
 };
 
 class assign_expr : public expr {};

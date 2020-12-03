@@ -1,27 +1,37 @@
 #include "symbol_table.hpp"
 
-llvm::AllocaInst *scope::add_var(llvm::Type *type, std::string name) {
-  llvm::AllocaInst *inst = builder.CreateAlloca(type, 0, name.c_str());
-  variables[name] = inst;
+#include "decl_common.hpp"
+
+value value::null;
+
+type_i value::get_type() { return type_i(llvm_val->getType(), is_signed); }
+
+/* type_i::type_i(type_i &&type) {
+  llvm_type = type.llvm_type;
+  is_signed = type.is_signed;
+} */
+
+llvm::AllocaInst *scope::add_var(type_i type, std::string name) {
+  llvm::Type *llvm_type = type.llvm_type;
+  llvm::AllocaInst *inst = builder.CreateAlloca(llvm_type, 0, name.c_str());
+  value val(inst, type.is_signed);
+  val.llvm_val = inst;
+  variables[name] = val;
   return inst;
 }
 
 llvm::Function *scope::add_func(llvm::Function *func, std::string name) {
-  variables[name] = func;
-  return func;
-}
-
-llvm::Value *scope::add_val(llvm::Value *val, std::string name) {
+  value val(func, true);
   variables[name] = val;
-  return val;
+  return func;
 }
 
 bool scope::check_var(std::string name) { return variables.count(name) > 0; }
 
-llvm::Value *scope::get_var(std::string name) {
+value scope::get_var(std::string name) {
   auto it = variables.find(name);
   if (it == variables.end()) {
-    return {};
+    return value::null;
   }
   return it->second;
 }
@@ -45,10 +55,10 @@ bool symbol_table::check_top_scope(std::string name) {
   return scopes.back().check_var(name);
 }
 
-llvm::Value *symbol_table::get_var(std::string name) {
+value symbol_table::get_var(std::string name) {
   for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
-    auto ins = it->get_var(name);
-    if (ins) return ins;
+    auto val = it->get_var(name);
+    if (val.llvm_val) return val;
   }
-  return nullptr;
+  return value::null;
 }

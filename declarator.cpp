@@ -17,12 +17,12 @@ void declarator_node::dump_tree() {
 
 std::string declarator_node::get_identifier() { return decl->get_identifier(); }
 
-llvm::Type *declarator_node::get_type(llvm::Type *type) {
+type_i declarator_node::get_type(type_i type) {
   if (p) type = p->get_type(type);
   return type;
 }
 
-void declarator_node::codegen(llvm::Type *type) {
+void declarator_node::codegen(type_i type) {
   if (p) type = p->get_type(type);
   decl->codegen(type);
 }
@@ -37,7 +37,7 @@ void identifier_declarator::dump_tree() {
 
 std::string identifier_declarator::get_identifier() { return identifier; }
 
-void identifier_declarator::codegen(llvm::Type *type) {
+void identifier_declarator::codegen(type_i type) {
   if (sym_table.check_top_scope(identifier)) {
     print_warning("Duplicate variable declaration. Ignoring the new one");
     return;
@@ -58,7 +58,7 @@ void array_declarator::dump_tree() {
   cout.unindent();
 }
 
-void array_declarator::codegen(llvm::Type *type) {
+void array_declarator::codegen(type_i type) {
   raise_error("Arrays are not supported yet!");
 }
 
@@ -76,8 +76,8 @@ void param_declaration::dump_tree() {
   cout.unindent();
 }
 
-llvm::Type *param_declaration::get_type() {
-  llvm::Type *ret = decl_spec->get_type();
+type_i param_declaration::get_type() {
+  type_i ret = decl_spec->get_type();
   if (decl) ret = decl->get_type(ret);
   return ret;
 }
@@ -88,11 +88,11 @@ bool param_declaration::set_arg_name(llvm::Argument *arg) {
   return true;
 }
 
-void param_declaration::add_arg_table(llvm::Value *value) {
+void param_declaration::add_arg_table(value val) {
   if (!decl) return;
   std::string identifier = decl->get_identifier();
-  auto alloca = sym_table.top_scope()->add_var(value->getType(), identifier);
-  ir_builder.CreateStore(value, alloca);
+  auto alloca = sym_table.top_scope()->add_var(val.get_type(), identifier);
+  ir_builder.CreateStore(val.llvm_val, alloca);
 }
 
 param_list *param_list::add(param_declaration *decl) {
@@ -117,8 +117,8 @@ void param_list::dump_tree() {
   cout.unindent();
 }
 
-std::vector<llvm::Type *> param_list::get_types() {
-  std::vector<llvm::Type *> ret(param_decls.size());
+std::vector<type_i> param_list::get_types() {
+  std::vector<type_i> ret(param_decls.size());
   for (int i = 0; i < param_decls.size(); i++) {
     ret[i] = param_decls[i]->get_type();
   }
@@ -134,7 +134,7 @@ void param_list::set_arg_names(llvm::iterator_range<llvm::Argument *> args) {
   }
 }
 
-void param_list::add_args_table(std::vector<llvm::Value *> values) {
+void param_list::add_args_table(std::vector<value> values) {
   if (values.size() != param_decls.size()) {
     raise_error("Number of values given does not match number of parameters");
   }
@@ -166,15 +166,19 @@ std::string function_declarator::get_identifier() {
   return decl->get_identifier();
 }
 
-llvm::Function *function_declarator::codegen_common(llvm::Type *ret_type) {
+llvm::Function *function_declarator::codegen_common(type_i ret_type) {
   std::vector<llvm::Type *> param_types;
   bool is_vararg = false;
   if (params) {
-    param_types = params->get_types();
+    auto ptypes = params->get_types();
+    param_types.reserve(ptypes.size());
+    std::transform(ptypes.begin(), ptypes.end(),
+                   std::back_inserter(param_types),
+                   [](type_i type) { return type.llvm_type; });
     is_vararg = params->is_vararg();
   }
   llvm::FunctionType *ftype =
-      llvm::FunctionType::get(ret_type, param_types, is_vararg);
+      llvm::FunctionType::get(ret_type.llvm_type, param_types, is_vararg);
 
   std::string identifier = decl->get_identifier();
   llvm::Function *function = llvm::Function::Create(
@@ -187,7 +191,7 @@ llvm::Function *function_declarator::codegen_common(llvm::Type *ret_type) {
   return function;
 }
 
-llvm::Function *function_declarator::codegen_def(llvm::Type *ret_type) {
+llvm::Function *function_declarator::codegen_def(type_i ret_type) {
   llvm::Function *func = codegen_common(ret_type);
   llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
@@ -195,9 +199,15 @@ llvm::Function *function_declarator::codegen_def(llvm::Type *ret_type) {
   sym_table.change_func(func);
   sym_table.add_scope();
   if (params) {
-    std::vector<llvm::Value *> args;
+    std::vector<type_i> types = params->get_types();
+    std::vector<value> args;
+    assert(types.size() == func->arg_size() &&
+           "Size of parameter list should equal the number of formal "
+           "arguments");
+    int i = 0;
     for (auto &arg : func->args()) {
-      args.push_back(&arg);
+      value val(&arg, types[i++].is_signed);
+      args.push_back(val);
     }
     params->add_args_table(args);
   }

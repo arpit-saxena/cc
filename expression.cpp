@@ -366,8 +366,8 @@ const_expr *const_expr::new_int_expr(const char *s) {
     type.add_spec(type_specifiers::CHAR);
     char c = str[1];  // TODO: Add support for escape sequences etc
     llvm::APInt int_val = llvm::APInt(8, c);
-    return new const_expr(llvm::ConstantInt::get(type.get_type(), int_val),
-                          false, str);
+    return new const_expr(
+        llvm::ConstantInt::get(type.get_type().llvm_type, int_val), false, str);
   }
 
   int start = 0, end = str.length() - 1;
@@ -431,14 +431,15 @@ const_expr *const_expr::new_int_expr(const char *s) {
   /* llvm::outs() << "Got val ";
   int_val.print(llvm::outs(), !is_unsigned);
   llvm::outs() << " from string " << str << '\n'; */
-  return new const_expr(llvm::ConstantInt::get(type.get_type(), int_val),
-                        !is_unsigned, str);
+  return new const_expr(
+      llvm::ConstantInt::get(type.get_type().llvm_type, int_val), !is_unsigned,
+      str);
 }
 
 value const_expr::get_val(int num) {
   value val;
   val.is_signed = true;
-  llvm::Type *type = type_specifiers(type_specifiers::INT).get_type();
+  llvm::Type *type = type_specifiers(type_specifiers::INT).get_type().llvm_type;
   val.llvm_val = llvm::ConstantInt::get(type, num, true);
   return val;
 }

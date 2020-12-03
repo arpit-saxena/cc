@@ -80,6 +80,7 @@ class type_specifiers : public ast_node {
   type specs;
   type_specifiers* raise_incompat_error(type spec);
   type_specifiers* change_type(type specs);
+  llvm::Type* get_llvm_type();
 
  public:
   type_specifiers(type spec = UNSET);
@@ -87,7 +88,8 @@ class type_specifiers : public ast_node {
   type get_specs();
   void dump_tree() override;
   std::string to_string();
-  llvm::Type* get_type();
+  bool is_signed();
+  type_i get_type();
 };
 
 /*
@@ -115,7 +117,8 @@ class pointer_node : public ast_node {
  public:
   pointer_node* add(type_qualifiers* quals);
   void dump_tree() override;
-  llvm::PointerType* get_type(llvm::Type* type);
+  // For a pointer is_signed is related to signedness of the pointed-to type
+  type_i get_type(type_i type);
 };
 
 class declaration_specs : public ast_node {
@@ -129,7 +132,7 @@ class declaration_specs : public ast_node {
   declaration_specs* add(type_specifiers::type type_spec);
   declaration_specs* add(type_qualifiers::qualifier type_qual);
   void dump_tree() override;
-  llvm::Type* get_type();
+  type_i get_type();
 };
 
 #endif /* DECL_COMMON_HPP */

@@ -9,17 +9,6 @@
 #include "ast.hpp"
 
 /*
- * The frontend needs to maintain more data for a value than a llvm::Value holds
- * such as the signedness, since it determines which instructions to emit.
- * This struct is a wrapper of llvm::Value and any other extra data that is to
- * be maintained
- */
-struct value {
-  llvm::Value *llvm_val;
-  bool is_signed = false;
-};
-
-/*
  * There is a class hierarchy of empty classes denoting a particular kind of
  * expression And for a class actually representing that kind of expression, the
  * class is derived from that expression with "_ops" appended, meaning the

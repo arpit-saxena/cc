@@ -247,10 +247,24 @@ std::string type_specifiers::to_string() {
   return "unknown";
 }
 
+bool type_specifiers::is_signed() {
+  switch (specs) {
+    case CHAR:
+    case UCHAR:
+    case USHORT:
+    case UINT:
+    case ULONG:
+    case ULONG_LONG:
+    case UNSIGNED:
+      return false;
+  }
+  return true;
+}
+
 /*
  * Using https://en.cppreference.com/w/c/language/arithmetic_types as reference
  */
-llvm::Type *type_specifiers::get_type() {
+llvm::Type *type_specifiers::get_llvm_type() {
   switch (specs) {
     case VOID:
       return llvm::Type::getVoidTy(the_context);
@@ -284,6 +298,10 @@ llvm::Type *type_specifiers::get_type() {
   print_warning(
       "Cannot be converted to llvm Type. Either not set or incomplete");
   return nullptr;
+}
+
+type_i type_specifiers::get_type() {
+  return type_i(get_llvm_type(), is_signed());
 }
 
 type_qualifiers *type_qualifiers::add_qual(type_qualifiers::qualifier qual) {
@@ -336,12 +354,12 @@ void pointer_node::dump_tree() {
   cout.unindent();
 }
 
-llvm::PointerType *pointer_node::get_type(llvm::Type *type) {
-  llvm::Type *ret = type;
+type_i pointer_node::get_type(type_i type) {
+  llvm::Type *&ret = type.llvm_type;
   for (auto &qual : quals) {
     ret = ret->getPointerTo();
   }
-  return static_cast<llvm::PointerType *>(ret);
+  return type;
 }
 
 declaration_specs *declaration_specs::add(storage_specifiers::storage spec) {
@@ -368,4 +386,4 @@ void declaration_specs::dump_tree() {
   cout.unindent();
 }
 
-llvm::Type *declaration_specs::get_type() { return type_spec.get_type(); }
+type_i declaration_specs::get_type() { return type_spec.get_type(); }

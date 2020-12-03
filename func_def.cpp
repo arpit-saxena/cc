@@ -33,7 +33,7 @@ void func_def::codegen() {
   llvm::Function *func = func_decl->codegen_def(decl_specs->get_type());
 
   statement->codegen();
-  if (decl_specs->get_type()->isVoidTy()) {
+  if (decl_specs->get_type().llvm_type->isVoidTy()) {
     ir_builder.CreateRetVoid();
   }
   llvm::verifyFunction(*func);

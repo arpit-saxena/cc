@@ -86,6 +86,20 @@ class binary_expr_ops : public binary_expr {
 class cast_expr : public binary_expr {};
 class unary_expr : public cast_expr {};
 
+class unary_op_expr : public unary_expr {
+ public:
+  enum OP { ADDRESS_OF, INDIRECTION, PLUS, MINUS, BIT_NOT, NOT };
+
+ private:
+  cast_expr *expression;
+  OP unary_op;
+
+ public:
+  unary_op_expr(OP unary_op, cast_expr *expression);
+  static std::string op_string(OP op);
+  virtual void dump_tree() override;
+};
+
 class arg_expr_list : public ast_node {
   std::vector<assign_expr *> exprs;
 

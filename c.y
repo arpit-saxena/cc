@@ -67,6 +67,7 @@ void yyerror(const char *s);
 %nterm <postfix_expr *> postfix_expression
 %nterm <arg_expr_list *> argument_expression_list
 %nterm <unary_expr *> unary_expression
+%nterm <unary_op_expr::OP> unary_operator
 %nterm <cast_expr *> cast_expression
 
 %nterm <binary_expr *> multiplicative_expression
@@ -152,19 +153,19 @@ unary_expression
 	: postfix_expression {$$ = $1;}
 	| INC_OP unary_expression
 	| DEC_OP unary_expression
-	| unary_operator cast_expression
+	| unary_operator cast_expression {$$ = new unary_op_expr($1, $2);}
 	| SIZEOF unary_expression
 	| SIZEOF '(' type_name ')'
 	| ALIGNOF '(' type_name ')'
 	;
 
 unary_operator
-	: '&'
-	| '*'
-	| '+'
-	| '-'
-	| '~'
-	| '!'
+	: '&' {$$ = unary_op_expr::ADDRESS_OF;}
+	| '*' {$$ = unary_op_expr::INDIRECTION;}
+	| '+' {$$ = unary_op_expr::PLUS;}
+	| '-' {$$ = unary_op_expr::MINUS;}
+	| '~' {$$ = unary_op_expr::BIT_NOT;}
+	| '!' {$$ = unary_op_expr::NOT;}
 	;
 
 cast_expression

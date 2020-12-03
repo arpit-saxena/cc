@@ -224,6 +224,38 @@ value binary_expr_ops::codegen() {
   return ret_val;
 }
 
+unary_op_expr::unary_op_expr(unary_op_expr::OP unary_op,
+                             cast_expr *expression) {
+  this->unary_op = unary_op;
+  this->expression = expression;
+}
+
+std::string unary_op_expr::op_string(unary_op_expr::OP op) {
+  switch (op) {
+    case ADDRESS_OF:
+      return "&";
+    case INDIRECTION:
+      return "*";
+    case PLUS:
+      return "+";
+    case MINUS:
+      return "-";
+    case BIT_NOT:
+      return "~";
+    case NOT:
+      return "!";
+  }
+  raise_error("Unkown unary operator");
+}
+
+void unary_op_expr::dump_tree() {
+  cout << "- (unary_expression)" << endl;
+  cout.indent();
+  cout << "- (operator) " << op_string(unary_op) << endl;
+  expression->dump_tree();
+  cout.unindent();
+}
+
 arg_expr_list *arg_expr_list::add(assign_expr *expr) {
   exprs.push_back(expr);
   return this;

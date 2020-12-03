@@ -138,6 +138,7 @@ llvm::Instruction::BinaryOps binary_expr_ops::get_arith_op(
       }
       break;
     case BIT_XOR:
+      return llvmOP::Xor;
     case AND:
       lhs.llvm_val = ir_builder.CreateICmpEQ(
           lhs.llvm_val, llvm::ConstantInt::getFalse(the_context));

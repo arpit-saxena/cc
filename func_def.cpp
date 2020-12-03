@@ -10,6 +10,10 @@ func_def::func_def(declaration_specs *decl_specs, declarator_node *declarator,
   this->decl_specs = decl_specs;
   this->declarator = declarator;
   this->statement = statement;
+  this->func_decl = declarator->get_func_decl();
+  if (!this->func_decl) {
+    raise_error("Function definition does not contain a function declarator");
+  }
 }
 
 void func_def::old_style_error() {

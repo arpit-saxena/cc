@@ -17,6 +17,7 @@ class func_def : public external_decl {
   declaration_specs *decl_specs;
   declarator_node *declarator;
   compound_stmt *statement;
+  function_declarator *func_decl;
 
  public:
   func_def(declaration_specs *decl_specs, declarator_node *declarator,

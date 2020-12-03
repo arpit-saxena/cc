@@ -10,12 +10,17 @@
 #include "ast.hpp"
 #include "decl_common.hpp"
 
+class function_declarator;  // forward declaration
+
 class direct_decl : public ast_node {
  public:
   virtual void dump_tree();
   virtual std::string get_identifier() = 0;
   // TODO: Make this pure virtual
   virtual void codegen(llvm::Type *type){};  // type is of the decl specifiers
+  // Helper method to get a function declarator anywhere inside the declarator
+  // hierarchy, would return nullptr if not found
+  virtual function_declarator *get_func_decl() = 0;
 };
 
 class declarator_node : public direct_decl {
@@ -26,6 +31,9 @@ class declarator_node : public direct_decl {
   declarator_node(direct_decl *decl, pointer_node *p = nullptr);
   void dump_tree() override;
   std::string get_identifier() override;
+  virtual function_declarator *get_func_decl() override {
+    return decl->get_func_decl();
+  }
   llvm::Type *get_type(llvm::Type *type);
   void codegen(llvm::Type *type) override;
 };
@@ -37,6 +45,7 @@ class identifier_declarator : public direct_decl {
   identifier_declarator(std::string &&identifier);
   void dump_tree() override;
   std::string get_identifier() override;
+  function_declarator *get_func_decl() override { return nullptr; }
 
   // This basically generates an alloca for a variable of given type. So this
   // shouldn't be called when the declarator is part of a function
@@ -51,6 +60,7 @@ class array_declarator : public direct_decl {
  public:
   array_declarator(direct_decl *decl);
   void dump_tree() override;
+  function_declarator *get_func_decl() override { return nullptr; }
   void codegen(llvm::Type *type) override;
 };
 
@@ -94,6 +104,7 @@ class function_declarator : public direct_decl {
   static void old_style_error();
   void dump_tree() override;
   std::string get_identifier() override;
+  virtual function_declarator *get_func_decl() override { return this; }
   void codegen(llvm::Type *ret_type);
 };
 

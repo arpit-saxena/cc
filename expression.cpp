@@ -106,8 +106,9 @@ void binary_expr_ops::gen_common_type(value lhs, value rhs) {
 
 // Assumes both values have been through proper type conversions
 llvm::Instruction::BinaryOps binary_expr_ops::get_arith_op(
-    value lhs, value rhs, binary_expr_ops::OP op) {
+    value &lhs, value &rhs, binary_expr_ops::OP op) {
   bool is_signed = lhs.is_signed && rhs.is_signed;
+  llvm::Type *common_type = lhs.llvm_val->getType();
   typedef llvm::Instruction::BinaryOps llvmOP;
   switch (op) {
     case MULT:
@@ -140,17 +141,26 @@ llvm::Instruction::BinaryOps binary_expr_ops::get_arith_op(
     case BIT_XOR:
       return llvmOP::Xor;
     case AND:
-      lhs.llvm_val = ir_builder.CreateICmpEQ(
-          lhs.llvm_val, llvm::ConstantInt::getFalse(the_context));
-      rhs.llvm_val = ir_builder.CreateICmpEQ(
-          rhs.llvm_val, llvm::ConstantInt::getFalse(the_context));
+      lhs.llvm_val = ir_builder.CreateICmpEQ(lhs.llvm_val,
+                                             const_expr::get_val(0).llvm_val);
+      lhs.llvm_val = ir_builder.CreateZExtOrBitCast(lhs.llvm_val, common_type,
+                                                    "zero extension cast");
+      rhs.llvm_val = ir_builder.CreateICmpEQ(rhs.llvm_val,
+                                             const_expr::get_val(0).llvm_val);
+      rhs.llvm_val = ir_builder.CreateZExtOrBitCast(rhs.llvm_val, common_type,
+                                                    "zero extension cast");
+      gen_common_type(lhs, rhs);
     case BIT_AND:
       return llvmOP::And;
     case OR:
-      lhs.llvm_val = ir_builder.CreateICmpEQ(
-          lhs.llvm_val, llvm::ConstantInt::getFalse(the_context));
-      rhs.llvm_val = ir_builder.CreateICmpEQ(
-          rhs.llvm_val, llvm::ConstantInt::getFalse(the_context));
+      lhs.llvm_val = ir_builder.CreateICmpEQ(lhs.llvm_val,
+                                             const_expr::get_val(0).llvm_val);
+      lhs.llvm_val = ir_builder.CreateZExtOrBitCast(lhs.llvm_val, common_type,
+                                                    "zero extension cast");
+      rhs.llvm_val = ir_builder.CreateICmpEQ(rhs.llvm_val,
+                                             const_expr::get_val(0).llvm_val);
+      rhs.llvm_val = ir_builder.CreateZExtOrBitCast(rhs.llvm_val, common_type,
+                                                    "zero extension cast");
     case BIT_OR:
       return llvmOP::Or;
   }
@@ -158,7 +168,7 @@ llvm::Instruction::BinaryOps binary_expr_ops::get_arith_op(
 }
 
 // Assumes both values have been through proper type conversions
-llvm::CmpInst::Predicate binary_expr_ops::get_cmp_pred(value lhs, value rhs,
+llvm::CmpInst::Predicate binary_expr_ops::get_cmp_pred(value &lhs, value &rhs,
                                                        OP op) {
   typedef llvm::CmpInst::Predicate pred;
 
@@ -206,6 +216,7 @@ value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
   gen_common_type(lhs, rhs);
   value ret_val;
   ret_val.is_signed = lhs.is_signed && rhs.is_signed;
+  llvm::Type *common_type = lhs.llvm_val->getType();
 
   switch (op) {
     case LT:
@@ -217,6 +228,8 @@ value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
       llvm::CmpInst::Predicate pred = get_cmp_pred(lhs, rhs, op);
       ret_val.llvm_val =
           ir_builder.CreateICmp(pred, lhs.llvm_val, rhs.llvm_val, "comparison");
+      ret_val.llvm_val = ir_builder.CreateZExtOrBitCast(
+          ret_val.llvm_val, common_type, "zero extension cast");
       break;
     }
     default: {
@@ -229,9 +242,8 @@ value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
   return ret_val;
 }
 
-unary_op_expr::unary_op_expr(unary_op_expr::OP unary_op,
-                             cast_expr *expression) {
-  this->unary_op = unary_op;
+unary_op_expr::unary_op_expr(unary_op_expr::OP op, cast_expr *expression) {
+  this->op = op;
   this->expression = expression;
 }
 
@@ -256,9 +268,34 @@ std::string unary_op_expr::op_string(unary_op_expr::OP op) {
 void unary_op_expr::dump_tree() {
   cout << "- (unary_expression)" << endl;
   cout.indent();
-  cout << "- (operator) " << op_string(unary_op) << endl;
+  cout << "- (operator) " << op_string(op) << endl;
   expression->dump_tree();
   cout.unindent();
+}
+
+value unary_op_expr::codegen() {
+  value val = expression->codegen();
+  return codegen(op, val);
+}
+
+value unary_op_expr::codegen(OP op, value val) {
+  typedef binary_expr_ops::OP bin_op;
+  switch (op) {
+    case ADDRESS_OF:
+    case INDIRECTION:
+      raise_error("& and * operators are not supported!");
+    case PLUS:
+      return val;  // TODO: Change this when adding support for floating points
+    case MINUS:
+      return binary_expr_ops::codegen(const_expr::get_val(0), bin_op::MINUS,
+                                      val);
+    case BIT_NOT:
+      return binary_expr_ops::codegen(const_expr::get_val(-1), bin_op::BIT_XOR,
+                                      val);
+    case NOT:
+      return binary_expr_ops::codegen(const_expr::get_val(0), bin_op::EQ, val);
+  }
+  raise_error("Unkown unary operator!");
 }
 
 arg_expr_list *arg_expr_list::add(assign_expr *expr) {
@@ -300,15 +337,17 @@ paren_expr::paren_expr(expr *expression) { this->expression = expression; }
 
 void paren_expr::dump_tree() { expression->dump_tree(); }
 
+value paren_expr::codegen() { return expression->codegen(); }
+
 const_expr::const_expr(llvm::Constant *data, bool is_signed, std::string str) {
   this->data = data;
   this->is_signed = is_signed;
   this->str = str;
 }
 
-// Parse a string representing int, long, long long and their unsigned variants
-// into a value and the corresponding type.
-// See https://clang.llvm.org/doxygen/LiteralSupport_8cpp_source.html#l00526 for
+// Parse a string representing int, long, long long and their unsigned
+// variants into a value and the corresponding type. See
+// https://clang.llvm.org/doxygen/LiteralSupport_8cpp_source.html#l00526 for
 // clang's implementation
 const_expr *const_expr::new_int_expr(const char *s) {
   std::string str(s);
@@ -394,6 +433,14 @@ const_expr *const_expr::new_int_expr(const char *s) {
   llvm::outs() << " from string " << str << '\n'; */
   return new const_expr(llvm::ConstantInt::get(type.get_type(), int_val),
                         !is_unsigned, str);
+}
+
+value const_expr::get_val(int num) {
+  value val;
+  val.is_signed = true;
+  llvm::Type *type = type_specifiers(type_specifiers::INT).get_type();
+  val.llvm_val = llvm::ConstantInt::get(type, num, true);
+  return val;
 }
 
 void const_expr::dump_tree() { cout << "- (constant) " << str << endl; }

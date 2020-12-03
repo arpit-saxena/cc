@@ -151,11 +151,13 @@ std::string function_declarator::get_identifier() {
 
 void function_declarator::codegen(llvm::Type *ret_type) {
   std::vector<llvm::Type *> param_types;
+  bool is_vararg = false;
   if (params) {
     param_types = params->get_types();
+    is_vararg = params->is_vararg();
   }
   llvm::FunctionType *ftype =
-      llvm::FunctionType::get(ret_type, param_types, params->is_vararg());
+      llvm::FunctionType::get(ret_type, param_types, is_vararg);
 
   std::string identifier = decl->get_identifier();
   llvm::Function *function = llvm::Function::Create(

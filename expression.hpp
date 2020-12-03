@@ -72,8 +72,9 @@ class binary_expr_ops : public binary_expr {
   binary_expr *left_expr;
   OP op;
   binary_expr *right_expr;
-  static llvm::Instruction::BinaryOps get_arith_op(value lhs, value rhs, OP op);
-  static llvm::CmpInst::Predicate get_cmp_pred(value lhs, value rhs, OP op);
+  static llvm::Instruction::BinaryOps get_arith_op(value &lhs, value &rhs,
+                                                   OP op);
+  static llvm::CmpInst::Predicate get_cmp_pred(value &lhs, value &rhs, OP op);
   static void gen_common_type(value lhs, value rhs);
 
  public:
@@ -93,12 +94,14 @@ class unary_op_expr : public unary_expr {
 
  private:
   cast_expr *expression;
-  OP unary_op;
+  OP op;
 
  public:
   unary_op_expr(OP unary_op, cast_expr *expression);
   static std::string op_string(OP op);
   virtual void dump_tree() override;
+  value codegen() override;
+  static value codegen(OP op, value val);
 };
 
 class arg_expr_list : public ast_node {
@@ -136,6 +139,7 @@ class paren_expr : public primary_expr {
  public:
   paren_expr(expr *expression);
   void dump_tree() override;
+  value codegen() override;
 };
 
 class const_expr : public primary_expr {
@@ -147,6 +151,7 @@ class const_expr : public primary_expr {
   const_expr(llvm::Constant *data, bool is_signed, std::string str);
   // includes character literals
   static const_expr *new_int_expr(const char *str);
+  static value get_val(int num);
   void dump_tree() override;
   value codegen() override;
 };

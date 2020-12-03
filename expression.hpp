@@ -1,7 +1,10 @@
 #ifndef EXPRESSION_HPP
 #define EXPRESSION_HPP
 
+#include <llvm/IR/Value.h>
+
 #include <string>
+#include <utility>
 
 #include "ast.hpp"
 
@@ -17,7 +20,13 @@
  * assignment expression and not a conditional expression
  */
 
-class expr : public ast_node {};
+class expr : public ast_node {
+ public:
+  virtual llvm::Value *codegen() {
+    raise_error("codegen not implemented for this expression!");
+  };  // TODO: Make this pure virtual
+};
+
 class assign_expr : public expr {};
 class cond_expr : public assign_expr {};
 
@@ -57,6 +66,7 @@ class binary_expr_ops : public binary_expr {
   binary_expr_ops(binary_expr *left, OP op, binary_expr *right);
   static std::string op_string(OP op);
   virtual void dump_tree() override;
+  llvm::Value *codegen() override;
 };
 
 class cast_expr : public binary_expr {};
@@ -99,7 +109,16 @@ class paren_expr : public primary_expr {
   void dump_tree() override;
 };
 
-class const_expr : public primary_expr {};
+class const_expr : public primary_expr {
+  llvm::Constant *data;
+
+ public:
+  const_expr(llvm::Constant *data);
+  static std::pair<llvm::APInt, llvm::Type *> get_int(std::string str);
+  // includes character literals
+  static const_expr *new_int_expr(const char *str);
+  void dump_tree() override{};
+};
 
 // Includes character and integer constants
 // TODO: Figure out how to separate them, and parse as char/int

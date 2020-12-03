@@ -120,6 +120,7 @@ class ident_expr : public primary_expr {
  public:
   ident_expr(const char *id);
   void dump_tree() override;
+  value codegen() override;
 };
 
 class paren_expr : public primary_expr {

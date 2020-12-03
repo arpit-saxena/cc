@@ -333,6 +333,15 @@ void ident_expr::dump_tree() {
   cout << "- (identifier) " << identifier << endl;
 }
 
+value ident_expr::codegen() {
+  value val = sym_table.get_var(identifier);
+  if (!val.llvm_val) {
+    raise_error("use of identifier before declaration");
+  }
+  val.llvm_val = ir_builder.CreateLoad(val.llvm_val, "load");
+  return val;
+}
+
 paren_expr::paren_expr(expr *expression) { this->expression = expression; }
 
 void paren_expr::dump_tree() { expression->dump_tree(); }

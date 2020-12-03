@@ -40,8 +40,8 @@ std::string storage_specifiers::to_string() {
 }
 
 type_specifiers::type_specifiers(type spec) {
+  this->specs = UNSET;
   if (spec == UNSET) {
-    this->specs = UNSET;
     return;
   }
   add_spec(spec);

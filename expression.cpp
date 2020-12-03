@@ -351,7 +351,10 @@ const_expr *const_expr::new_int_expr(const char *s) {
   // can also have a type long long if it can't be represented by the int type
   // See 6.4.4.1/5
   llvm::APInt int_val =
-      llvm::APInt(num_bits, str.substr(start, end - start + 1), !is_unsigned);
+      llvm::APInt(num_bits, str.substr(start, end - start + 1), radix);
+  /* llvm::outs() << "Got val ";
+  int_val.print(llvm::outs(), !is_unsigned);
+  llvm::outs() << " from string " << str << '\n'; */
   return new const_expr(llvm::ConstantInt::get(type.get_type(), int_val),
                         !is_unsigned, str);
 }

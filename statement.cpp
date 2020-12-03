@@ -59,3 +59,11 @@ void return_stmt::dump_tree() {
     cout.unindent();
   }
 }
+
+void return_stmt::codegen() {
+  if (expression) {
+    ir_builder.CreateRet(expression->codegen().llvm_val);
+  } else {
+    ir_builder.CreateRetVoid();
+  }
+}

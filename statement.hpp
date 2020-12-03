@@ -49,6 +49,7 @@ class return_stmt : public jump_stmt {
  public:
   return_stmt(expr *expression = nullptr);
   void dump_tree() override;
+  void codegen() override;
 };
 
 #endif /* STATEMENT_HPP */

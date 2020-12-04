@@ -2,7 +2,7 @@
 
 Stuff to do before submission
 
-- [ ] Fix symbol table semantics
+- [x] Fix symbol table semantics
 - [ ] Add function call and declaration codegen
 - [ ] Compile hello world
 - [ ] Add branching and control flow statements

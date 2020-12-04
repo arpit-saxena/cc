@@ -89,6 +89,10 @@ type_i expr::get_common_type(type_i t1, type_i t2) {
   return ret;
 }
 
+type_i expr::get_common_type(expr *e1, expr *e2) {
+  return get_common_type(e1->get_type(), e2->get_type());
+}
+
 cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
                              cond_expr *false_expr) {
   this->cond = cond;
@@ -106,13 +110,17 @@ value cond_expr_ops::codegen() {
 value cond_expr_ops::codegen(value cond_val, expr *true_expr,
                              expr *false_expr) {
   llvm::BasicBlock *curr_block = ir_builder.GetInsertBlock();
-  llvm::AllocaInst *result = sym_table.top_scope()->get_alloca(
-      llvm::IntegerType::get(the_context, 32), "res");
+
+  type_i res_type = get_common_type(true_expr, false_expr);
+
+  llvm::AllocaInst *result =
+      sym_table.top_scope()->get_alloca(res_type.llvm_type, "res");
 
   llvm::BasicBlock *true_block =
       llvm::BasicBlock::Create(the_context, "true", sym_table.get_curr_func());
   ir_builder.SetInsertPoint(true_block);
   value true_val = true_expr->codegen();
+  convert_to_type(true_val, res_type);
   llvm::BasicBlock *final_true_block = ir_builder.GetInsertBlock();
   ir_builder.CreateStore(true_val.llvm_val, result);
 
@@ -120,6 +128,7 @@ value cond_expr_ops::codegen(value cond_val, expr *true_expr,
       llvm::BasicBlock::Create(the_context, "false", sym_table.get_curr_func());
   ir_builder.SetInsertPoint(false_block);
   value false_val = false_expr->codegen();
+  convert_to_type(false_val, res_type);
   llvm::BasicBlock *final_false_block = ir_builder.GetInsertBlock();
   ir_builder.CreateStore(false_val.llvm_val, result);
 
@@ -136,6 +145,7 @@ value cond_expr_ops::codegen(value cond_val, expr *true_expr,
   ir_builder.SetInsertPoint(next_block);
   value ret;
   ret.llvm_val = ir_builder.CreateLoad(result, "res");
+  ret.is_signed = res_type.is_signed;
 
   return ret;
 }

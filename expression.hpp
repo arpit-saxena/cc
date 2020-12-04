@@ -32,6 +32,7 @@ class expr : public ast_node {
   static void convert_to_type(value &val, type_i type);
   static void gen_common_type(value &lhs, value &rhs);
   static type_i get_common_type(type_i type1, type_i type2);
+  static type_i get_common_type(expr *type1, expr *type2);
 };
 
 // When a value needs to be used as an expression

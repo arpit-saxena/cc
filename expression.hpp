@@ -29,7 +29,21 @@ class expr : public ast_node {
 };
 
 class assign_expr : public expr {};
+
+class binary_expr;  // forward declaration
+
 class cond_expr : public assign_expr {};
+
+class cond_expr_ops : public cond_expr {
+  binary_expr *cond;
+  expr *true_expr;
+  cond_expr *false_expr;
+
+ public:
+  cond_expr_ops(binary_expr *cond, expr *true_expr, cond_expr *false_expr);
+  value codegen() override;
+  void dump_tree() override;
+};
 
 class binary_expr : public cond_expr {};
 

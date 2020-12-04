@@ -6,14 +6,14 @@ value value::null;
 
 type_i value::get_type() { return type_i(llvm_val->getType(), is_signed); }
 
-/* type_i::type_i(type_i &&type) {
-  llvm_type = type.llvm_type;
-  is_signed = type.is_signed;
-} */
+llvm::AllocaInst *scope::get_alloca(llvm::Type *llvm_type, std::string name) {
+  llvm::AllocaInst *inst = builder.CreateAlloca(llvm_type, 0, name.c_str());
+  return inst;
+}
 
 llvm::AllocaInst *scope::add_var(type_i type, std::string name) {
   llvm::Type *llvm_type = type.llvm_type;
-  llvm::AllocaInst *inst = builder.CreateAlloca(llvm_type, 0, name.c_str());
+  llvm::AllocaInst *inst = get_alloca(llvm_type, name);
   value val(inst, type.is_signed);
   val.llvm_val = inst;
   variables[name] = val;
@@ -37,12 +37,14 @@ value scope::get_var(std::string name) {
 }
 
 symbol_table::symbol_table(llvm::IRBuilder<> &global_builder) {
+  func = nullptr;
   curr_builder = &global_builder;
   add_scope();
 }
 
 void symbol_table::change_func(llvm::Function *func) {
   // TODO: Fix this memory leak
+  this->func = func;
   curr_builder = new llvm::IRBuilder<>(&func->getEntryBlock(),
                                        func->getEntryBlock().begin());
 }
@@ -50,6 +52,8 @@ void symbol_table::change_func(llvm::Function *func) {
 void symbol_table::add_scope() { scopes.emplace_back(*curr_builder); }
 void symbol_table::pop_scope() { scopes.pop_back(); }
 scope *symbol_table::top_scope() { return &scopes.back(); }
+
+llvm::Function *symbol_table::get_curr_func() { return func; }
 
 bool symbol_table::check_top_scope(std::string name) {
   return scopes.back().check_var(name);

@@ -12,6 +12,59 @@ void expr::convert_to_bool(llvm::Value *&val) {
                                        llvm::IntegerType::get(the_context, 32));
 }
 
+cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
+                             cond_expr *false_expr) {
+  this->cond = cond;
+  this->true_expr = true_expr;
+  this->false_expr = false_expr;
+}
+
+value cond_expr_ops::codegen() {
+  value cond_val = cond->codegen();
+  cond_val.llvm_val = ir_builder.CreateTruncOrBitCast(
+      cond_val.llvm_val, llvm::IntegerType::get(the_context, 1));
+  llvm::BasicBlock *curr_block = ir_builder.GetInsertBlock();
+  llvm::AllocaInst *result = sym_table.top_scope()->get_alloca(
+      llvm::IntegerType::get(the_context, 32), "res");
+
+  llvm::BasicBlock *true_block =
+      llvm::BasicBlock::Create(the_context, "true", sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(true_block);
+  value true_val = true_expr->codegen();
+  ir_builder.CreateStore(true_val.llvm_val, result);
+
+  llvm::BasicBlock *false_block =
+      llvm::BasicBlock::Create(the_context, "false", sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(false_block);
+  value false_val = false_expr->codegen();
+  ir_builder.CreateStore(false_val.llvm_val, result);
+
+  ir_builder.SetInsertPoint(curr_block);
+  ir_builder.CreateCondBr(cond_val.llvm_val, true_block, false_block);
+
+  llvm::BasicBlock *next_block =
+      llvm::BasicBlock::Create(the_context, "", sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(true_block);
+  ir_builder.CreateBr(next_block);
+  ir_builder.SetInsertPoint(false_block);
+  ir_builder.CreateBr(next_block);
+
+  ir_builder.SetInsertPoint(next_block);
+  value ret;
+  ret.llvm_val = ir_builder.CreateLoad(result, "res");
+
+  return ret;
+}
+
+void cond_expr_ops::dump_tree() {
+  cout << "- (conditional_expression)" << endl;
+  cout.indent();
+  cond->dump_tree();
+  true_expr->dump_tree();
+  false_expr->dump_tree();
+  cout.unindent();
+}
+
 binary_expr_ops::binary_expr_ops(binary_expr *left, OP op, binary_expr *right) {
   this->left_expr = left;
   this->op = op;
@@ -101,11 +154,9 @@ void binary_expr_ops::gen_common_type(value lhs, value rhs) {
     }
 
     if (is_signed) {
-      val.llvm_val =
-          ir_builder.CreateSExtOrBitCast(val.llvm_val, dest_type, "conv");
+      val.llvm_val = ir_builder.CreateSExtOrBitCast(val.llvm_val, dest_type);
     } else {
-      val.llvm_val =
-          ir_builder.CreateZExtOrBitCast(val.llvm_val, dest_type, "conv");
+      val.llvm_val = ir_builder.CreateZExtOrBitCast(val.llvm_val, dest_type);
     }
   }
 }

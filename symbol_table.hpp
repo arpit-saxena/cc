@@ -43,6 +43,8 @@ class scope {
 
  public:
   scope(llvm::IRBuilder<> &builder) : builder(builder){};
+  // Doesn't add allocation to the symbol table
+  llvm::AllocaInst *get_alloca(llvm::Type *llvm_type, std::string name);
   llvm::AllocaInst *add_var(type_i type, std::string name);
   llvm::Function *add_func(llvm::Function *func, std::string name);
   bool check_var(std::string name);
@@ -52,6 +54,7 @@ class scope {
 class symbol_table {
   std::vector<scope> scopes;
   llvm::IRBuilder<> *curr_builder;
+  llvm::Function *func;
 
  public:
   symbol_table(llvm::IRBuilder<> &global_builder);
@@ -59,6 +62,7 @@ class symbol_table {
   void add_scope();  // Adds scope to top of the stack
   void pop_scope();  // Pops scope off the stack
   scope *top_scope();
+  llvm::Function *get_curr_func();
 
   // Checks if name defines a variable in top scope
   bool check_top_scope(std::string name);

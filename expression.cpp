@@ -114,7 +114,7 @@ value cond_expr_ops::codegen(value cond_val, expr *true_expr,
   type_i res_type = get_common_type(true_expr, false_expr);
 
   llvm::AllocaInst *result =
-      sym_table.top_scope()->get_alloca(res_type.llvm_type, "res");
+      sym_table.top_func_scope()->get_alloca(res_type.llvm_type, "res");
 
   llvm::BasicBlock *true_block =
       llvm::BasicBlock::Create(the_context, "true", sym_table.get_curr_func());

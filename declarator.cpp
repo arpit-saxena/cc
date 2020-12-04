@@ -38,12 +38,12 @@ void identifier_declarator::dump_tree() {
 std::string identifier_declarator::get_identifier() { return identifier; }
 
 void identifier_declarator::codegen(type_i type) {
-  if (sym_table.check_top_scope(identifier)) {
+  if (sym_table.top_func_scope()->check_top_scope(identifier)) {
     print_warning("Duplicate variable declaration. Ignoring the new one");
     return;
   }
 
-  sym_table.top_scope()->add_var(type, identifier);
+  sym_table.top_func_scope()->add_var(type, identifier);
 }
 
 array_declarator::array_declarator(direct_decl *decl) {
@@ -91,7 +91,7 @@ bool param_declaration::set_arg_name(llvm::Argument *arg) {
 void param_declaration::add_arg_table(value val) {
   if (!decl) return;
   std::string identifier = decl->get_identifier();
-  auto alloca = sym_table.top_scope()->add_var(val.get_type(), identifier);
+  auto alloca = sym_table.top_func_scope()->add_var(val.get_type(), identifier);
   ir_builder.CreateStore(val.llvm_val, alloca);
 }
 
@@ -187,7 +187,7 @@ llvm::Function *function_declarator::codegen_common(type_i ret_type) {
   if (params) {
     params->set_arg_names(function->args());
   }
-  sym_table.top_scope()->add_func(function, identifier);
+  sym_table.top_func_scope()->add_func(function, identifier);
   return function;
 }
 
@@ -196,8 +196,7 @@ llvm::Function *function_declarator::codegen_def(type_i ret_type) {
   llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
   ir_builder.SetInsertPoint(block);
-  sym_table.change_func(func);
-  sym_table.add_scope();
+  sym_table.push_func_scope(func);
   if (params) {
     std::vector<type_i> types = params->get_types();
     std::vector<value> args;

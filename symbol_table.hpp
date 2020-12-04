@@ -37,37 +37,59 @@ struct value {
 };
 
 class scope {
- private:
   std::unordered_map<std::string, value> variables;
-  llvm::IRBuilder<> &builder;
+  llvm::IRBuilder<> *builder;
 
  public:
-  scope(llvm::IRBuilder<> &builder) : builder(builder){};
-  // Doesn't add allocation to the symbol table
+  scope(llvm::IRBuilder<> *builder) : builder(builder){};
+  scope(scope &&other) = default;
   llvm::AllocaInst *get_alloca(llvm::Type *llvm_type, std::string name);
   llvm::AllocaInst *add_var(type_i type, std::string name);
   llvm::Function *add_func(llvm::Function *func, std::string name);
+  value add_val(value val, std::string name);
   bool check_var(std::string name);
   value get_var(std::string name);
 };
 
-class symbol_table {
+class func_scope {
   std::vector<scope> scopes;
-  llvm::IRBuilder<> *curr_builder;
+  llvm::IRBuilder<> *builder;
+  bool own_builder;
   llvm::Function *func;
 
  public:
-  symbol_table(llvm::IRBuilder<> &global_builder);
-  void change_func(llvm::Function *func);
-  void add_scope();  // Adds scope to top of the stack
-  void pop_scope();  // Pops scope off the stack
-  scope *top_scope();
-  llvm::Function *get_curr_func();
-
-  // Checks if name defines a variable in top scope
+  func_scope(llvm::Function *func);
+  func_scope(llvm::IRBuilder<> *builder);
+  func_scope(func_scope &&other) = default;
+  ~func_scope();
+  llvm::Function *get_scope_func();
+  // Doesn't add allocation to the symbol table
+  llvm::AllocaInst *get_alloca(llvm::Type *llvm_type, std::string name);
+  llvm::AllocaInst *add_var(type_i type, std::string name);
+  llvm::Function *add_func(llvm::Function *func, std::string name);
+  value add_val(value val, std::string name);
   bool check_top_scope(std::string name);
 
   // Searches all scopes from top to bottom for variable defined by name.
+  value get_var(std::string name);
+};
+
+class symbol_table {
+  std::vector<func_scope> func_scopes;
+  llvm::IRBuilder<> &global_builder;
+  llvm::Function *curr_func;
+
+ public:
+  symbol_table(llvm::IRBuilder<> &global_builder);
+  void push_func_scope(llvm::Function *func);  // Adds scope to top of the stack
+  void pop_func_scope();                       // Pops scope off the stack
+  func_scope *top_func_scope();
+  llvm::Function *get_curr_func();
+
+  value add_var(type_i type, std::string name);
+  llvm::Function *add_func(llvm::Function *func, std::string name);
+
+  // Searches top function scope and global scope for variable defined by name.
   value get_var(std::string name);
 };
 

@@ -36,6 +36,10 @@ void func_def::codegen() {
   if (decl_specs->get_type().llvm_type->isVoidTy()) {
     ir_builder.CreateRetVoid();
   }
+
+  // The function scope would've been added by codegen_def of func_decl
+  sym_table.pop_func_scope();
+
   /* for (auto &block : func->getBasicBlockList()) {
     block.print(llvm::outs());
   } */

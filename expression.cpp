@@ -12,6 +12,83 @@ void expr::convert_to_bool(llvm::Value *&val) {
                                        llvm::IntegerType::get(the_context, 32));
 }
 
+void expr::convert_to_type(value &val, type_i rtype) {
+  auto ltype_llvm = llvm::dyn_cast<llvm::IntegerType>(val.llvm_val->getType());
+  auto rtype_llvm = llvm::dyn_cast<llvm::IntegerType>(rtype.llvm_type);
+
+  if (!ltype_llvm || !rtype_llvm) {
+    raise_error("Cannot convert non integer type!");
+  }
+
+  int lbits = ltype_llvm->getBitWidth(), rbits = rtype_llvm->getBitWidth();
+
+  if (val.is_signed) {
+    val.llvm_val = ir_builder.CreateSExtOrTrunc(val.llvm_val, rtype_llvm);
+  } else {
+    val.llvm_val = ir_builder.CreateZExtOrTrunc(val.llvm_val, rtype_llvm);
+  }
+
+  val.is_signed = rtype.is_signed;
+}
+
+void expr::gen_common_type(value &lhs, value &rhs) {
+  type_i dest_type = get_common_type(lhs.get_type(), rhs.get_type());
+
+  // Only one value will be converted but since get_common_type doesn't give any
+  // info on which value to convert, we have to do this. Relies on the fact that
+  // CreateSExtOrTrunc will return the value as is if it is already the
+  // destination type. Could probably use CreateSExt too but the docs don't
+  // specify that it doesn't generate an op if value already has desired type
+
+  if (lhs.is_signed) {
+    lhs.llvm_val =
+        ir_builder.CreateSExtOrTrunc(lhs.llvm_val, dest_type.llvm_type);
+  } else {
+    lhs.llvm_val =
+        ir_builder.CreateZExtOrTrunc(lhs.llvm_val, dest_type.llvm_type);
+  }
+
+  if (rhs.is_signed) {
+    rhs.llvm_val =
+        ir_builder.CreateSExtOrTrunc(rhs.llvm_val, dest_type.llvm_type);
+  } else {
+    rhs.llvm_val =
+        ir_builder.CreateZExtOrTrunc(rhs.llvm_val, dest_type.llvm_type);
+  }
+}
+
+type_i expr::get_common_type(type_i t1, type_i t2) {
+  auto ltype = llvm::dyn_cast<llvm::IntegerType>(t1.llvm_type);
+  auto rtype = llvm::dyn_cast<llvm::IntegerType>(t2.llvm_type);
+
+  if (!ltype || !rtype) {
+    raise_error("Common types for non integer types not defined!");
+  }
+
+  int lbits = ltype->getBitWidth(), rbits = rtype->getBitWidth();
+
+  type_i ret = t1;
+  if (lbits == rbits) {
+    ret.is_signed = t1.is_signed && t2.is_signed;
+    return ret;
+  }
+
+  value val;
+  if (lbits < rbits) {
+    ret.llvm_type = rtype;
+    // FIXME: This is slightly more complicated than this. See 6.3.1.8/1
+    // Basically, if unsigned has greater rank, then result is unsigned
+    // Else if signed one can represent both signed and unsigned values then
+    // result is signed, otherwise the result is unsigned
+    ret.is_signed = t2.is_signed;
+  } else {
+    ret.llvm_type = ltype;
+    ret.is_signed = t1.is_signed;
+  }
+
+  return ret;
+}
+
 cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
                              cond_expr *false_expr) {
   this->cond = cond;
@@ -128,44 +205,6 @@ void binary_expr_ops::dump_tree() {
   cout << "- (operator) " << op_string(op) << endl;
   right_expr->dump_tree();
   cout.unindent();
-}
-
-void binary_expr_ops::gen_common_type(value lhs, value rhs) {
-  auto ltype = llvm::dyn_cast<llvm::IntegerType>(lhs.llvm_val->getType());
-  auto rtype = llvm::dyn_cast<llvm::IntegerType>(rhs.llvm_val->getType());
-
-  if (!ltype || !rtype) {
-    raise_error("Binary operations on non integer types are not supported!");
-  }
-
-  int lbits = ltype->getBitWidth(), rbits = rtype->getBitWidth();
-
-  // This value will be used when number of bits of both operands is same.
-  bool is_signed = lhs.is_signed && rhs.is_signed;
-
-  if (lbits != rbits) {
-    value val;
-    llvm::IntegerType *dest_type;
-    if (lbits < rbits) {
-      val = lhs;
-      dest_type = rtype;
-      // FIXME: This is slightly more complicated than this. See 6.3.1.8/1
-      // Basically, is unsigned has greater rank, then result is unsigned
-      // Else if signed one can represent both signed and unsigned values then
-      // result is signed, otherwise the result is unsigned
-      is_signed = rhs.is_signed;
-    } else {
-      val = rhs;
-      dest_type = ltype;
-      is_signed = lhs.is_signed;
-    }
-
-    if (is_signed) {
-      val.llvm_val = ir_builder.CreateSExtOrBitCast(val.llvm_val, dest_type);
-    } else {
-      val.llvm_val = ir_builder.CreateZExtOrBitCast(val.llvm_val, dest_type);
-    }
-  }
 }
 
 // Assumes both values have been through proper type conversions

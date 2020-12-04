@@ -26,6 +26,9 @@ class expr : public ast_node {
     raise_error("codegen not implemented for this expression!");
   };  // TODO: Make this pure virtual
   static void convert_to_bool(llvm::Value *&val);
+  static void convert_to_type(value &val, type_i type);
+  static void gen_common_type(value &lhs, value &rhs);
+  static type_i get_common_type(type_i type1, type_i type2);
 };
 
 // When a value needs to be used as an expression
@@ -91,7 +94,6 @@ class binary_expr_ops : public binary_expr {
   static llvm::Instruction::BinaryOps get_arith_op(value &lhs, value &rhs,
                                                    OP op);
   static llvm::CmpInst::Predicate get_cmp_pred(value &lhs, value &rhs, OP op);
-  static void gen_common_type(value lhs, value rhs);
 
  public:
   binary_expr_ops(binary_expr *left, OP op, binary_expr *right);

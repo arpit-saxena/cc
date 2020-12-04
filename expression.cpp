@@ -149,6 +149,10 @@ void cond_expr_ops::dump_tree() {
   cout.unindent();
 }
 
+type_i cond_expr_ops::get_type() {
+  return get_common_type(true_expr->get_type(), false_expr->get_type());
+}
+
 binary_expr_ops::binary_expr_ops(binary_expr *left, OP op, binary_expr *right) {
   this->left_expr = left;
   this->op = op;
@@ -359,6 +363,10 @@ value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
   return ret_val;
 }
 
+type_i binary_expr_ops::get_type() {
+  return get_common_type(left_expr->get_type(), right_expr->get_type());
+}
+
 unary_op_expr::unary_op_expr(unary_op_expr::OP op, cast_expr *expression) {
   this->op = op;
   this->expression = expression;
@@ -415,6 +423,18 @@ value unary_op_expr::codegen(OP op, value val) {
   raise_error("Unkown unary operator!");
 }
 
+type_i unary_op_expr::get_type() {
+  switch (op) {
+    case PLUS:
+    case MINUS:
+    case BIT_NOT:
+    case NOT:
+      // TODO: Change this when adding support for other types
+      return expression->get_type();
+  }
+  raise_error("Address-of and indirection operators are not supported!");
+}
+
 arg_expr_list *arg_expr_list::add(assign_expr *expr) {
   exprs.push_back(expr);
   return this;
@@ -459,11 +479,21 @@ value ident_expr::codegen() {
   return val;
 }
 
+type_i ident_expr::get_type() {
+  value val = sym_table.get_var(identifier);
+  if (!val.llvm_val) {
+    raise_error("use of identifier before declaration");
+  }
+  return val.get_type();
+}
+
 paren_expr::paren_expr(expr *expression) { this->expression = expression; }
 
 void paren_expr::dump_tree() { expression->dump_tree(); }
 
 value paren_expr::codegen() { return expression->codegen(); }
+
+type_i paren_expr::get_type() { return expression->get_type(); }
 
 const_expr::const_expr(llvm::Constant *data, bool is_signed, std::string str) {
   this->data = data;
@@ -578,6 +608,8 @@ value const_expr::codegen() {
   ret_val.is_signed = is_signed;
   return ret_val;
 }
+
+type_i const_expr::get_type() { return type_i(data->getType(), is_signed); }
 
 string_expr::string_expr(const char *str) : str(str) { free((void *)str); }
 

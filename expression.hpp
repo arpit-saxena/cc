@@ -25,6 +25,9 @@ class expr : public ast_node {
   virtual value codegen() {
     raise_error("codegen not implemented for this expression!");
   };  // TODO: Make this pure virtual
+  virtual type_i get_type() {
+    raise_error("get_type not implemented for this expression!");
+  }  // TODO: Make this pure virtual
   static void convert_to_bool(llvm::Value *&val);
   static void convert_to_type(value &val, type_i type);
   static void gen_common_type(value &lhs, value &rhs);
@@ -39,6 +42,7 @@ class value_expr : public expr {
   value_expr(value v) : val(v) {}
   value codegen() override { return val; }
   void dump_tree() override { cout << "- (value)" << endl; }
+  type_i get_type() override { return val.get_type(); }
 };
 
 class assign_expr : public expr {};
@@ -58,6 +62,7 @@ class cond_expr_ops : public cond_expr {
   // Assumes value to be i1
   static value codegen(value cond, expr *true_expr, expr *false_expr);
   void dump_tree() override;
+  type_i get_type() override;
 };
 
 class binary_expr : public cond_expr {};
@@ -102,6 +107,7 @@ class binary_expr_ops : public binary_expr {
   value codegen() override;
   static value codegen(expr *left, OP op, expr *right);
   static value codegen(value left, OP op, value right);
+  type_i get_type() override;
 };
 
 class cast_expr : public binary_expr {};
@@ -121,6 +127,7 @@ class unary_op_expr : public unary_expr {
   virtual void dump_tree() override;
   value codegen() override;
   static value codegen(OP op, value val);
+  type_i get_type() override;
 };
 
 class arg_expr_list : public ast_node {
@@ -151,6 +158,7 @@ class ident_expr : public primary_expr {
   ident_expr(const char *id);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 class paren_expr : public primary_expr {
@@ -160,6 +168,7 @@ class paren_expr : public primary_expr {
   paren_expr(expr *expression);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 class const_expr : public primary_expr {
@@ -174,6 +183,7 @@ class const_expr : public primary_expr {
   static value get_val(int num);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 class string_expr : public primary_expr {

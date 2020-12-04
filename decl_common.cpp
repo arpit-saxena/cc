@@ -69,7 +69,14 @@ type_specifiers *type_specifiers::add_spec(type spec) {
 
   switch (this->specs) {
     case UNSET:
-      return change_type(spec);
+      switch (spec) {
+        case UNSIGNED:
+          return change_type(UINT);
+        case SIGNED:
+          return change_type(INT);
+        default:
+          return change_type(spec);
+      }
     case VOID:
     case SCHAR:
     case UCHAR:

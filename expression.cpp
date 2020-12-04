@@ -23,6 +23,11 @@ value cond_expr_ops::codegen() {
   value cond_val = cond->codegen();
   cond_val.llvm_val = ir_builder.CreateTruncOrBitCast(
       cond_val.llvm_val, llvm::IntegerType::get(the_context, 1));
+  return codegen(cond_val, true_expr, false_expr);
+}
+
+value cond_expr_ops::codegen(value cond_val, expr *true_expr,
+                             expr *false_expr) {
   llvm::BasicBlock *curr_block = ir_builder.GetInsertBlock();
   llvm::AllocaInst *result = sym_table.top_scope()->get_alloca(
       llvm::IntegerType::get(the_context, 32), "res");

@@ -42,6 +42,8 @@ class cond_expr_ops : public cond_expr {
  public:
   cond_expr_ops(binary_expr *cond, expr *true_expr, cond_expr *false_expr);
   value codegen() override;
+  // Assumes value to be i1
+  static value codegen(value cond, expr *true_expr, expr *false_expr);
   void dump_tree() override;
 };
 

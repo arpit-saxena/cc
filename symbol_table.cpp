@@ -4,7 +4,12 @@
 
 value value::null;
 
-type_i value::get_type() { return type_i(llvm_val->getType(), is_signed); }
+type_i value::get_type() {
+  if (auto alloca = llvm::dyn_cast<llvm::AllocaInst>(llvm_val)) {
+    return type_i(alloca->getAllocatedType(), is_signed);
+  }
+  return type_i(llvm_val->getType(), is_signed);
+}
 
 llvm::AllocaInst *scope::get_alloca(llvm::Type *llvm_type, std::string name) {
   llvm::AllocaInst *inst = builder->CreateAlloca(llvm_type, 0, name.c_str());

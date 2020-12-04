@@ -28,6 +28,16 @@ class expr : public ast_node {
   static void convert_to_bool(llvm::Value *&val);
 };
 
+// When a value needs to be used as an expression
+class value_expr : public expr {
+  value val;
+
+ public:
+  value_expr(value v) : val(v) {}
+  value codegen() override { return val; }
+  void dump_tree() override { cout << "- (value)" << endl; }
+};
+
 class assign_expr : public expr {};
 
 class binary_expr;  // forward declaration
@@ -88,6 +98,7 @@ class binary_expr_ops : public binary_expr {
   static std::string op_string(OP op);
   virtual void dump_tree() override;
   value codegen() override;
+  static value codegen(expr *left, OP op, expr *right);
   static value codegen(value left, OP op, value right);
 };
 

@@ -36,7 +36,10 @@ void func_def::codegen() {
   if (decl_specs->get_type().llvm_type->isVoidTy()) {
     ir_builder.CreateRetVoid();
   }
-  llvm::verifyFunction(*func);
+  /* for (auto &block : func->getBasicBlockList()) {
+    block.print(llvm::outs());
+  } */
+  llvm::verifyFunction(*func);  // TODO: Print debugging info from here
 }
 
 trans_unit *trans_unit::add(external_decl *decl) {

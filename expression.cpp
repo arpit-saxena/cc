@@ -36,22 +36,24 @@ value cond_expr_ops::codegen(value cond_val, expr *true_expr,
       llvm::BasicBlock::Create(the_context, "true", sym_table.get_curr_func());
   ir_builder.SetInsertPoint(true_block);
   value true_val = true_expr->codegen();
+  llvm::BasicBlock *final_true_block = ir_builder.GetInsertBlock();
   ir_builder.CreateStore(true_val.llvm_val, result);
 
   llvm::BasicBlock *false_block =
       llvm::BasicBlock::Create(the_context, "false", sym_table.get_curr_func());
   ir_builder.SetInsertPoint(false_block);
   value false_val = false_expr->codegen();
+  llvm::BasicBlock *final_false_block = ir_builder.GetInsertBlock();
   ir_builder.CreateStore(false_val.llvm_val, result);
 
   ir_builder.SetInsertPoint(curr_block);
   ir_builder.CreateCondBr(cond_val.llvm_val, true_block, false_block);
 
-  llvm::BasicBlock *next_block =
-      llvm::BasicBlock::Create(the_context, "", sym_table.get_curr_func());
-  ir_builder.SetInsertPoint(true_block);
+  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(
+      the_context, "cond_end", sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(final_true_block);
   ir_builder.CreateBr(next_block);
-  ir_builder.SetInsertPoint(false_block);
+  ir_builder.SetInsertPoint(final_false_block);
   ir_builder.CreateBr(next_block);
 
   ir_builder.SetInsertPoint(next_block);
@@ -202,14 +204,8 @@ llvm::Instruction::BinaryOps binary_expr_ops::get_arith_op(
       break;
     case BIT_XOR:
       return llvmOP::Xor;
-    case AND:
-      convert_to_bool(lhs.llvm_val);
-      convert_to_bool(rhs.llvm_val);
     case BIT_AND:
       return llvmOP::And;
-    case OR:
-      convert_to_bool(lhs.llvm_val);
-      convert_to_bool(rhs.llvm_val);
     case BIT_OR:
       return llvmOP::Or;
   }
@@ -255,9 +251,31 @@ llvm::CmpInst::Predicate binary_expr_ops::get_cmp_pred(value &lhs, value &rhs,
   raise_error("The operation is not a comparison operator");
 }
 
-value binary_expr_ops::codegen() {
-  value lhs = left_expr->codegen();
-  value rhs = right_expr->codegen();
+value binary_expr_ops::codegen() { return codegen(left_expr, op, right_expr); }
+
+value binary_expr_ops::codegen(expr *lhs_expr, OP op, expr *rhs_expr) {
+  value lhs = lhs_expr->codegen();
+
+  switch (op) {
+    case AND: {
+      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val,
+                                             const_expr::get_val(0).llvm_val);
+      value_expr false_expr(const_expr::get_val(0));
+      value val = cond_expr_ops::codegen(lhs, rhs_expr, &false_expr);
+      return binary_expr_ops::codegen(val, binary_expr_ops::NE,
+                                      const_expr::get_val(0));
+    }
+    case OR: {
+      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val,
+                                             const_expr::get_val(0).llvm_val);
+      value_expr true_expr(const_expr::get_val(1));
+      value val = cond_expr_ops::codegen(lhs, &true_expr, rhs_expr);
+      return binary_expr_ops::codegen(val, binary_expr_ops::NE,
+                                      const_expr::get_val(0));
+    }
+  }
+
+  value rhs = rhs_expr->codegen();
   return codegen(lhs, op, rhs);
 }
 
@@ -266,6 +284,17 @@ value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
   value ret_val;
   ret_val.is_signed = lhs.is_signed && rhs.is_signed;
   llvm::Type *common_type = lhs.llvm_val->getType();
+
+  if (op == AND || op == OR) {
+    convert_to_bool(lhs.llvm_val);
+    convert_to_bool(rhs.llvm_val);
+
+    if (op == AND) {
+      op = BIT_AND;
+    } else {
+      op = BIT_OR;
+    }
+  }
 
   switch (op) {
     case LT:

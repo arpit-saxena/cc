@@ -195,16 +195,15 @@ llvm::Function *function_declarator::codegen_common(type_i ret_type) {
 llvm::Function *function_declarator::codegen_def(type_i ret_type) {
   llvm::Function *func = codegen_common(ret_type);
   // Use this block to store variable allocations
-  llvm::BasicBlock *var_block =
-      llvm::BasicBlock::Create(the_context, "allocs", func);
-  sym_table.push_func_scope(func);
-  llvm::BasicBlock *entry_block =
+  llvm::BasicBlock *block =
       llvm::BasicBlock::Create(the_context, "entry", func);
+  ir_builder.SetInsertPoint(block);
+  sym_table.push_func_scope(func);
+  llvm::Value *t = ir_builder.getTrue();
+  auto nop = llvm::BinaryOperator::Create(llvm::Instruction::Add, t, t, "nop");
+  nop = ir_builder.Insert(nop, "nop");
 
-  ir_builder.SetInsertPoint(var_block);
-  auto br_ins = ir_builder.CreateBr(entry_block);
-  sym_table.top_func_scope()->add_block_terminator(br_ins);
-  ir_builder.SetInsertPoint(entry_block);
+  sym_table.top_func_scope()->add_block_terminator(nop);
 
   if (params) {
     std::vector<type_i> types = params->get_types();

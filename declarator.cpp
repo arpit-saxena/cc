@@ -22,9 +22,9 @@ type_i declarator_node::get_type(type_i type) {
   return type;
 }
 
-void declarator_node::codegen(type_i type) {
+value declarator_node::codegen(type_i type) {
   if (p) type = p->get_type(type);
-  decl->codegen(type);
+  return decl->codegen(type);
 }
 
 identifier_declarator::identifier_declarator(std::string &&identifier) {
@@ -37,13 +37,15 @@ void identifier_declarator::dump_tree() {
 
 std::string identifier_declarator::get_identifier() { return identifier; }
 
-void identifier_declarator::codegen(type_i type) {
+value identifier_declarator::codegen(type_i type) {
   if (sym_table.top_func_scope()->check_top_scope(identifier)) {
-    print_warning("Duplicate variable declaration. Ignoring the new one");
-    return;
+    // TODO: Can continue from here and use old value for this identifier
+    // Need to think what to return from here. Make an error type?
+    raise_error("Duplicate variable declaration!");
   }
 
-  sym_table.top_func_scope()->add_var(type, identifier);
+  auto alloca = sym_table.top_func_scope()->add_var(type, identifier);
+  return value(alloca, type.is_signed);
 }
 
 array_declarator::array_declarator(direct_decl *decl) {
@@ -58,7 +60,7 @@ void array_declarator::dump_tree() {
   cout.unindent();
 }
 
-void array_declarator::codegen(type_i type) {
+value array_declarator::codegen(type_i type) {
   raise_error("Arrays are not supported yet!");
 }
 

@@ -18,7 +18,9 @@ class direct_decl : public ast_node {
   virtual std::string get_identifier() = 0;
   // TODO: Make this pure virtual
   // Generate code for the declarator given type specifiers
-  virtual void codegen(type_i type){};
+  virtual value codegen(type_i type) {
+    raise_error("codegen not defined for this direct declarator");
+  };
   // Helper method to get a function declarator anywhere inside the declarator
   // hierarchy, would return nullptr if not found
   virtual function_declarator *get_func_decl() = 0;
@@ -36,7 +38,7 @@ class declarator_node : public direct_decl {
     return decl->get_func_decl();
   }
   type_i get_type(type_i type);
-  void codegen(type_i type) override;
+  value codegen(type_i type) override;
 };
 
 class identifier_declarator : public direct_decl {
@@ -51,7 +53,7 @@ class identifier_declarator : public direct_decl {
   // This basically generates an alloca for a variable with given type
   // specifiers. So this shouldn't be called when the declarator is part of a
   // function
-  void codegen(type_i type) override;
+  value codegen(type_i type) override;
 };
 
 ////////////////// ARRAY DECLARATOR ///////////////////////
@@ -63,7 +65,7 @@ class array_declarator : public direct_decl {
   array_declarator(direct_decl *decl);
   void dump_tree() override;
   function_declarator *get_func_decl() override { return nullptr; }
-  void codegen(type_i type) override;
+  value codegen(type_i type) override;
 };
 
 //////////////// FUNCTION DECLARATOR ///////////////////////

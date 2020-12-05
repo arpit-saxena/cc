@@ -110,43 +110,41 @@ value cond_expr_ops::codegen() {
 
 value cond_expr_ops::codegen(value cond_val, expr *true_expr,
                              expr *false_expr) {
-  llvm::BasicBlock *curr_block = ir_builder.GetInsertBlock();
-
   type_i res_type = get_common_type(true_expr, false_expr);
 
-  llvm::AllocaInst *result =
-      sym_table.top_func_scope()->get_alloca(res_type.llvm_type, "res");
+  sym_table.top_func_scope()->push_scope();
+  value result = sym_table.add_var(res_type, "res");
+
+  llvm::BasicBlock *curr_block = ir_builder.GetInsertBlock();
 
   llvm::BasicBlock *true_block =
       llvm::BasicBlock::Create(the_context, "true", sym_table.get_curr_func());
+  llvm::BasicBlock *false_block =
+      llvm::BasicBlock::Create(the_context, "false", sym_table.get_curr_func());
+  ir_builder.CreateCondBr(cond_val.llvm_val, true_block, false_block);
+  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(
+      the_context, "cond_end", sym_table.get_curr_func());
+
+  ir_builder.SetInsertPoint(next_block);
+  value ret = create_load(result, "res");
+
+  sym_table.top_func_scope()->pop_scope();
+
   ir_builder.SetInsertPoint(true_block);
   value true_val = true_expr->codegen();
   convert_to_type(true_val, res_type);
-  llvm::BasicBlock *final_true_block = ir_builder.GetInsertBlock();
-  ir_builder.CreateStore(true_val.llvm_val, result);
+  ir_builder.CreateStore(true_val.llvm_val, result.llvm_val);
+  ir_builder.CreateBr(next_block);
 
-  llvm::BasicBlock *false_block =
-      llvm::BasicBlock::Create(the_context, "false", sym_table.get_curr_func());
   ir_builder.SetInsertPoint(false_block);
   value false_val = false_expr->codegen();
   convert_to_type(false_val, res_type);
-  llvm::BasicBlock *final_false_block = ir_builder.GetInsertBlock();
-  ir_builder.CreateStore(false_val.llvm_val, result);
-
-  ir_builder.SetInsertPoint(curr_block);
-  ir_builder.CreateCondBr(cond_val.llvm_val, true_block, false_block);
-
-  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(
-      the_context, "cond_end", sym_table.get_curr_func());
-  ir_builder.SetInsertPoint(final_true_block);
-  ir_builder.CreateBr(next_block);
-  ir_builder.SetInsertPoint(final_false_block);
+  ir_builder.CreateStore(false_val.llvm_val, result.llvm_val);
   ir_builder.CreateBr(next_block);
 
   ir_builder.SetInsertPoint(next_block);
-  value ret;
-  ret.llvm_val = ir_builder.CreateLoad(result, "res");
-  ret.is_signed = res_type.is_signed;
+
+  // curr_block->print(llvm::outs());
 
   return ret;
 }
@@ -560,12 +558,7 @@ value ident_expr::codegen() {
     raise_error("use of identifier before declaration");
   }
 
-  if (auto func = llvm::dyn_cast<llvm::Function>(val.llvm_val)) {
-    return val;  // Don't create a load for functions
-  }
-
-  val.llvm_val = ir_builder.CreateLoad(val.llvm_val, identifier);
-  return val;
+  return create_load(val, identifier);
 }
 
 type_i ident_expr::get_type() {

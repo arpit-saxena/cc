@@ -20,6 +20,8 @@ class ast_node {
   static llvm::IRBuilder<> ir_builder;
   static symbol_table sym_table;
 
+  static value create_load(value val, std::string identifier);
+
  public:
   static std::unique_ptr<llvm::Module> the_module;
 

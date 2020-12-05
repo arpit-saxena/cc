@@ -23,3 +23,14 @@ void ast_node::raise_error [[noreturn]] (std::string err) {
   std::cerr << "Error: " << err << '\n';
   std::exit(1);
 }
+
+value ast_node::create_load(value val, std::string identifier) {
+  if (llvm::isa<llvm::Function>(val.llvm_val) ||
+      llvm::isa<llvm::GlobalVariable>(val.llvm_val)) {
+    return val;  // Don't create a load for functions and global variables
+  }
+
+  val.llvm_val = ir_builder.CreateLoad(val.llvm_val, identifier);
+  return val;
+  llvm::Value *llvm_val = val.llvm_val;
+}

@@ -70,6 +70,11 @@ class func_scope {
   value add_val(value val, std::string name);
   bool check_top_scope(std::string name);
 
+  void add_block_terminator(llvm::Instruction *ins);
+
+  void push_scope();
+  void pop_scope();
+
   // Searches all scopes from top to bottom for variable defined by name.
   value get_var(std::string name);
 };

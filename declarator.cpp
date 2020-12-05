@@ -44,8 +44,7 @@ value identifier_declarator::codegen(type_i type) {
     raise_error("Duplicate variable declaration!");
   }
 
-  auto alloca = sym_table.top_func_scope()->add_var(type, identifier);
-  return value(alloca, type.is_signed);
+  return sym_table.add_var(type, identifier);
 }
 
 array_declarator::array_declarator(direct_decl *decl) {
@@ -195,10 +194,18 @@ llvm::Function *function_declarator::codegen_common(type_i ret_type) {
 
 llvm::Function *function_declarator::codegen_def(type_i ret_type) {
   llvm::Function *func = codegen_common(ret_type);
-  llvm::BasicBlock *block =
-      llvm::BasicBlock::Create(the_context, "entry", func);
-  ir_builder.SetInsertPoint(block);
+  // Use this block to store variable allocations
+  llvm::BasicBlock *var_block =
+      llvm::BasicBlock::Create(the_context, "allocs", func);
   sym_table.push_func_scope(func);
+  llvm::BasicBlock *entry_block =
+      llvm::BasicBlock::Create(the_context, "entry", func);
+
+  ir_builder.SetInsertPoint(var_block);
+  auto br_ins = ir_builder.CreateBr(entry_block);
+  sym_table.top_func_scope()->add_block_terminator(br_ins);
+  ir_builder.SetInsertPoint(entry_block);
+
   if (params) {
     std::vector<type_i> types = params->get_types();
     std::vector<value> args;
@@ -213,4 +220,8 @@ llvm::Function *function_declarator::codegen_def(type_i ret_type) {
     params->add_args_table(args);
   }
   return func;
+}
+
+value function_declarator::codegen(type_i ret_type) {
+  return value(codegen_common(ret_type), ret_type.is_signed);
 }

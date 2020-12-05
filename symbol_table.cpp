@@ -90,6 +90,20 @@ bool func_scope::check_top_scope(std::string name) {
   return scopes.back().check_var(name);
 }
 
+void func_scope::add_block_terminator(llvm::Instruction *ins) {
+  if (!own_builder) {
+    std::cout << "Don't own builder, so won't change its insertion point due "
+                 "to block terminator\n";
+    return;
+  }
+
+  builder->SetInsertPoint(ins);
+}
+
+void func_scope::push_scope() { scopes.emplace_back(builder); }
+
+void func_scope::pop_scope() { scopes.pop_back(); }
+
 value func_scope::get_var(std::string name) {
   for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
     auto val = it->get_var(name);
@@ -124,7 +138,8 @@ value symbol_table::add_var(type_i type, std::string name) {
 
   llvm::GlobalVariable *global_var = new llvm::GlobalVariable(
       *ast_node::the_module, type.llvm_type, /* isConstant */ false,
-      llvm::GlobalValue::CommonLinkage, /* Initializer */ 0, name);
+      /* Unsure which linkage to use */ llvm::GlobalValue::PrivateLinkage,
+      /* Initializer */ llvm::Constant::getNullValue(type.llvm_type), name);
   value global_val(global_var, type.is_signed);
   return func_scopes.back().add_val(global_val, name);
 }

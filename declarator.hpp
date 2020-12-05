@@ -119,6 +119,9 @@ class function_declarator : public direct_decl {
   // and the corresponding arguments, and push them onto the symbol table in a
   // function scope
   llvm::Function *codegen_def(type_i ret_type);
+
+  // For function declaration
+  value codegen(type_i ret_type) override;
 };
 
 #endif /* DECLARATOR_HPP */

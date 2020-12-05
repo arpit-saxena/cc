@@ -151,6 +151,7 @@ class func_call : public postfix_expr {
   func_call(postfix_expr *func_expr, arg_expr_list *expr_list = nullptr);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 class primary_expr : public postfix_expr {};

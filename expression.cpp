@@ -547,6 +547,22 @@ value func_call::codegen() {
                                       // about the return type
 }
 
+type_i func_call::get_type() {
+  type_i func_type = func_expr->get_type();
+  llvm::FunctionType *ll_func_type;
+  if (auto ll_func_ptr =
+          llvm::dyn_cast<llvm::PointerType>(func_type.llvm_type)) {
+    ll_func_type =
+        llvm::dyn_cast<llvm::FunctionType>(ll_func_ptr->getElementType());
+  }
+
+  if (!ll_func_type) {
+    raise_error("Type of expression in function call is not function!");
+  }
+
+  return type_i(ll_func_type->getReturnType(), func_type.is_signed);
+}
+
 ident_expr::ident_expr(const char *id) { identifier = std::string(id); }
 
 void ident_expr::dump_tree() {

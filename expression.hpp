@@ -137,6 +137,8 @@ class arg_expr_list : public ast_node {
  public:
   arg_expr_list *add(assign_expr *expr);
   void dump_tree() override;
+  std::vector<type_i> get_types();
+  std::vector<value> codegen();
 };
 
 class postfix_expr : public unary_expr {};
@@ -148,6 +150,7 @@ class func_call : public postfix_expr {
  public:
   func_call(postfix_expr *func_expr, arg_expr_list *expr_list = nullptr);
   void dump_tree() override;
+  value codegen() override;
 };
 
 class primary_expr : public postfix_expr {};

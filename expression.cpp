@@ -106,8 +106,8 @@ value cond_expr_ops::codegen() {
   value cond_val = cond->codegen();
   sym_table.top_func_scope()->push_scope();
   value binary_cond = sym_table.add_var(ir_builder.getInt1Ty(), "cond");
-  binary_cond.llvm_val = ir_builder.CreateTruncOrBitCast(
-      cond_val.llvm_val, llvm::IntegerType::get(the_context, 1));
+  binary_cond.llvm_val = ir_builder.CreateICmpNE(
+      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
   sym_table.top_func_scope()->pop_scope();
   return codegen(binary_cond, true_expr, false_expr);
 }

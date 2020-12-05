@@ -45,7 +45,10 @@ int main(int argc, const char **argv) {
     printf("\n--- AST END ---\n\n");
   }
 
-  printf("Parse retv = %d\n", ret);
+  if (ret != 0) {
+    printf("Parse failed. No output file written");
+    exit(2);
+  }
 
   std::string out_str;
   if (!out_file_name) {
@@ -55,9 +58,7 @@ int main(int argc, const char **argv) {
     out_str += ".ll";
   }
 
-  printf("\nGenerating code...\n");
   ast_node::base->codegen();
-  printf("Generated, written to %s\n", out_str.c_str());
 
   std::error_code err;
   llvm::raw_fd_ostream file(out_str, err);

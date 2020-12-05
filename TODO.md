@@ -3,7 +3,9 @@
 Stuff to do before submission
 
 - [x] Fix symbol table semantics
-- [ ] Add function call and declaration codegen
+- [x] Add function call codegen
+- [ ] Add declaration codegen
+- [ ] Add string literal support (Also probably const support)
 - [ ] Compile hello world
 - [ ] Add branching and control flow statements
   - [ ] if

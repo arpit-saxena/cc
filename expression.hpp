@@ -185,6 +185,8 @@ class const_expr : public primary_expr {
   // includes character literals
   static const_expr *new_int_expr(const char *str);
   static value get_val(int num);
+  static value get_val(int num, type_i type);
+  static value get_val(int num, llvm::Type *type);
   void dump_tree() override;
   value codegen() override;
   type_i get_type() override;

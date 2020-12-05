@@ -7,7 +7,8 @@
 #include "decl_common.hpp"
 
 void expr::convert_to_bool(llvm::Value *&val) {
-  val = ir_builder.CreateICmpEQ(val, const_expr::get_val(0).llvm_val);
+  val = ir_builder.CreateICmpEQ(
+      val, const_expr::get_val(0, val->getType()).llvm_val);
   val = ir_builder.CreateZExtOrBitCast(val,
                                        llvm::IntegerType::get(the_context, 32));
 }
@@ -309,22 +310,21 @@ value binary_expr_ops::codegen() { return codegen(left_expr, op, right_expr); }
 value binary_expr_ops::codegen(expr *lhs_expr, OP op, expr *rhs_expr) {
   value lhs = lhs_expr->codegen();
 
+  value zero_val = const_expr::get_val(0, lhs.get_type().llvm_type);
+  value one_val = const_expr::get_val(1, lhs.get_type().llvm_type);
+
   switch (op) {
     case AND: {
-      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val,
-                                             const_expr::get_val(0).llvm_val);
-      value_expr false_expr(const_expr::get_val(0));
+      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
+      value_expr false_expr(zero_val);
       value val = cond_expr_ops::codegen(lhs, rhs_expr, &false_expr);
-      return binary_expr_ops::codegen(val, binary_expr_ops::NE,
-                                      const_expr::get_val(0));
+      return binary_expr_ops::codegen(val, binary_expr_ops::NE, zero_val);
     }
     case OR: {
-      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val,
-                                             const_expr::get_val(0).llvm_val);
-      value_expr true_expr(const_expr::get_val(1));
+      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
+      value_expr true_expr(one_val);
       value val = cond_expr_ops::codegen(lhs, &true_expr, rhs_expr);
-      return binary_expr_ops::codegen(val, binary_expr_ops::NE,
-                                      const_expr::get_val(0));
+      return binary_expr_ops::codegen(val, binary_expr_ops::NE, zero_val);
     }
   }
 
@@ -422,13 +422,14 @@ value unary_op_expr::codegen(OP op, value val) {
     case PLUS:
       return val;  // TODO: Change this when adding support for floating points
     case MINUS:
-      return binary_expr_ops::codegen(const_expr::get_val(0), bin_op::MINUS,
-                                      val);
+      return binary_expr_ops::codegen(const_expr::get_val(0, val.get_type()),
+                                      bin_op::MINUS, val);
     case BIT_NOT:
-      return binary_expr_ops::codegen(const_expr::get_val(-1), bin_op::BIT_XOR,
-                                      val);
+      return binary_expr_ops::codegen(const_expr::get_val(-1, val.get_type()),
+                                      bin_op::BIT_XOR, val);
     case NOT:
-      return binary_expr_ops::codegen(const_expr::get_val(0), bin_op::EQ, val);
+      return binary_expr_ops::codegen(const_expr::get_val(0, val.get_type()),
+                                      bin_op::EQ, val);
   }
   raise_error("Unkown unary operator!");
 }
@@ -681,10 +682,21 @@ const_expr *const_expr::new_int_expr(const char *s) {
 }
 
 value const_expr::get_val(int num) {
+  return get_val(num, ir_builder.getInt32Ty());
+}
+
+value const_expr::get_val(int num, type_i type) {
+  return get_val(num, type.llvm_type);
+}
+
+value const_expr::get_val(int num, llvm::Type *type) {
   value val;
   val.is_signed = true;
-  llvm::Type *type = type_specifiers(type_specifiers::INT).get_type().llvm_type;
-  val.llvm_val = llvm::ConstantInt::get(type, num, true);
+  auto *int_type = llvm::dyn_cast<llvm::IntegerType>(type);
+  if (!int_type) {
+    raise_error("Cannot get int value of non integer type");
+  }
+  val.llvm_val = llvm::ConstantInt::get(int_type, num, true);
   return val;
 }
 

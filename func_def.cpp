@@ -65,7 +65,7 @@ void trans_unit::codegen() {
     decl->codegen();
   }
   if (llvm::verifyModule(*the_module, &llvm::errs())) {
+    the_module->print(llvm::errs(), nullptr);
     return;
   }
-  the_module->print(llvm::errs(), nullptr);
 }

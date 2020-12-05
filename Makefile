@@ -3,7 +3,7 @@
 ENTRY=2018MT10742
 
 CXX = g++
-CXX_FLAGS = $(shell llvm-config --cxxflags --ldflags --libs core) -g -std=c++17 -lm -lfl
+CXX_FLAGS = $(shell llvm-config --cxxflags --ldflags --libs core) -g -std=c++17 -lm -lfl -lpopt
 
 # Final binary
 BIN = cc

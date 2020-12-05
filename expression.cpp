@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <sstream>
 #include <string>
 
 #include "decl_common.hpp"
@@ -704,6 +705,58 @@ value const_expr::codegen() {
 
 type_i const_expr::get_type() { return type_i(data->getType(), is_signed); }
 
-string_expr::string_expr(const char *str) : str(str) { free((void *)str); }
+string_expr::string_expr(const char *c_str) : str(c_str) {
+  free((void *)c_str);
+  str = str.substr(1, str.length() - 2);  // Remove quotations
+  unescape_escape_seqs();
+}
 
 void string_expr::dump_tree() { cout << "- (string) " << str << endl; }
+
+value string_expr::codegen() {
+  llvm::GlobalVariable *llvm_str = ir_builder.CreateGlobalString(str);
+  value zero = const_expr::get_val(0);
+  std::vector<llvm::Value *> indices{zero.llvm_val, zero.llvm_val};
+  llvm::Value *ptr = ir_builder.CreateInBoundsGEP(llvm_str, indices);
+  return value(ptr, true);
+}
+
+// Originally from https://stackoverflow.com/a/28766726/5585431
+// Only supports a few sequences for now. Adding other simple escape sequences
+// requires adding a case in the switch statement.
+void string_expr::unescape_escape_seqs() {
+  auto &s = str;
+  std::stringstream ss{""};
+
+  for (size_t i = 0; i < s.length(); i++) {
+    if (s[i] == '\\') {
+      switch (s[++i]) {
+        case 'n':
+          ss << "\n";
+          break;
+        case '"':
+          ss << "\"";
+          break;
+        case '\\':
+          ss << "\\";
+          break;
+        case '?':
+          ss << "\?";
+          break;
+        case 't':
+          ss << "\t";
+          break;
+        case 'r':
+          ss << "\r";
+          break;
+        default:
+          ss << "\\";
+          i--;
+      }
+    } else {
+      ss << s[i];
+    }
+  }
+
+  str = ss.str();
+}

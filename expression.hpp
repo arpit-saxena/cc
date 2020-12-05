@@ -193,11 +193,16 @@ class const_expr : public primary_expr {
 };
 
 class string_expr : public primary_expr {
-  const std::string str;
+  std::string str;
+  // Escape sequences such as \n become \\n due to escaping of \ during parsing.
+  // This function reverts that
+  // Currently only unescapes some simple escape sequences
+  void unescape_escape_seqs();
 
  public:
   string_expr(const char *str);
   void dump_tree() override;
+  value codegen() override;
 };
 
 #endif /* EXPRESSION_HPP */

@@ -61,8 +61,22 @@ void return_stmt::dump_tree() {
 }
 
 void return_stmt::codegen() {
+  llvm::Function *func = sym_table.get_curr_func();
+  if (!func) {
+    raise_error("Cannot have return statement outside of a function");
+  }
+
+  llvm::Type *ret_ty = func->getReturnType();
+  if (ret_ty->isVoidTy() && expression) {
+    raise_error(
+        "Cannot have expression in return statement for function with void "
+        "return type");
+  }
+
   if (expression) {
-    ir_builder.CreateRet(expression->codegen().llvm_val);
+    value ret = expression->codegen();
+    expr::convert_to_type(ret, type_i(ret_ty));
+    ir_builder.CreateRet(ret.llvm_val);
   } else {
     ir_builder.CreateRetVoid();
   }

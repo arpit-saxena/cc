@@ -74,6 +74,11 @@ void trans_unit::codegen() {
   for (auto decl : external_decls) {
     decl->codegen();
   }
+
+  if (!the_module->getFunction("main")) {
+    raise_error("'main' function not defined!");
+  }
+
   if (llvm::verifyModule(*the_module, &llvm::errs())) {
     the_module->print(llvm::errs(), nullptr);
     return;

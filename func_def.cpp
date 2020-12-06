@@ -33,8 +33,18 @@ void func_def::codegen() {
   llvm::Function *func = func_decl->codegen_def(decl_specs->get_type());
 
   statement->codegen();
-  if (decl_specs->get_type().llvm_type->isVoidTy()) {
-    ir_builder.CreateRetVoid();
+
+  if (!ir_builder.GetInsertBlock()->getTerminator()) {
+    if (ir_builder.GetInsertBlock()->empty()) {
+      // Empty basic block. Remove it
+      ir_builder.GetInsertBlock()->eraseFromParent();
+    } else {
+      if (!decl_specs->get_type().llvm_type->isVoidTy()) {
+        print_warning(
+            "No return statement in function with non-void return type");
+      }
+      ir_builder.CreateRetVoid();
+    }
   }
 
   // The function scope would've been added by codegen_def of func_decl

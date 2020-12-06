@@ -86,14 +86,20 @@ void if_stmt::codegen() {
   sym_table.top_func_scope()->push_scope();
   then_stmt->codegen();
   sym_table.top_func_scope()->pop_scope();
-  ir_builder.CreateBr(end_block);
+
+  if (!ir_builder.GetInsertBlock()->getTerminator()) {
+    ir_builder.CreateBr(end_block);
+  }
 
   if (else_stmt) {
     ir_builder.SetInsertPoint(else_block);
     sym_table.top_func_scope()->push_scope();
     else_stmt->codegen();
     sym_table.top_func_scope()->pop_scope();
-    ir_builder.CreateBr(end_block);
+
+    if (!ir_builder.GetInsertBlock()->getTerminator()) {
+      ir_builder.CreateBr(end_block);
+    }
   }
 
   ir_builder.SetInsertPoint(end_block);
@@ -163,6 +169,17 @@ void return_stmt::codegen() {
     raise_error(
         "Cannot have expression in return statement for function with void "
         "return type");
+  } else if (!ret_ty->isVoidTy() && !expression) {
+    raise_error(
+        "Cannot have return statement without an expression in a function with "
+        "non-void return type");
+  }
+
+  if (ir_builder.GetInsertBlock()->getTerminator()) {
+    if (expression) {
+      print_warning("Unreachable code");
+    }
+    return;
   }
 
   if (expression) {

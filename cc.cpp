@@ -16,13 +16,16 @@ int main(int argc, const char **argv) {
   int print_ast = 0;
   char *out_file_name = nullptr;
   int no_codegen = 0;
+  char *t;
   poptOption options_table[] = {
-      {"print-ast", 'p', POPT_ARG_NONE, &print_ast, 0, "print ast",
-       "print ast"},
-      {"no-codegen", 'n', POPT_ARG_NONE, &no_codegen, 0, "Dont' generate code",
+      {"print-ast", 'p', POPT_ARG_NONE, &print_ast, 0,
+       "Prints generated ast. Also disables code generation", "print ast"},
+      {"no-codegen", 'n', POPT_ARG_NONE, &no_codegen, 0,
+       "Don't generate code. Only AST is parsed and any parsing errors are "
+       "reported",
        "Don't generate code"},
       {nullptr, 'o', POPT_ARG_STRING, &out_file_name, 0,
-       "base name of output .ll file", "outfile-basename"},
+       "Base name of output .ll file", "outfile-basename"},
       POPT_AUTOHELP POPT_TABLEEND};
 
   poptContext context = poptGetContext(nullptr, argc, argv, options_table, 0);
@@ -34,10 +37,16 @@ int main(int argc, const char **argv) {
 
   if (!filename) {
     printf("Specify a filename after command\n");
-    exit(1);
+    return 1;
   }
 
   yyin = fopen(filename, "r");
+
+  if (!yyin) {
+    printf("Unable to open file \"%s\"\n", filename);
+    return 2;
+  }
+
   assert(yyin);
 
   // yydebug = 1;
@@ -53,7 +62,7 @@ int main(int argc, const char **argv) {
     exit(2);
   }
 
-  if (!no_codegen) {
+  if (!no_codegen && !print_ast) {
     std::string out_str;
     if (!out_file_name) {
       out_str = "a.ll";

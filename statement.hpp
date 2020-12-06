@@ -57,6 +57,7 @@ class while_stmt : public iteration_stmt {
  public:
   while_stmt(expr *condition, stmt_node *statement);
   void dump_tree() override;
+  void codegen() override;
 };
 
 class jump_stmt : public stmt_node {

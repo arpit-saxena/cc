@@ -111,6 +111,34 @@ void while_stmt::dump_tree() {
   cout.unindent();
 }
 
+void while_stmt::codegen() {
+  sym_table.top_func_scope()->push_scope();
+
+  llvm::BasicBlock *cond_block = llvm::BasicBlock::Create(
+      the_context, "while_cond", sym_table.get_curr_func());
+  llvm::BasicBlock *body_block = llvm::BasicBlock::Create(
+      the_context, "while_body", sym_table.get_curr_func());
+  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
+      the_context, "while_end", sym_table.get_curr_func());
+
+  ir_builder.CreateBr(cond_block);
+
+  ir_builder.SetInsertPoint(cond_block);
+  value cond_val = condition->codegen();
+  llvm::Value *binary_cond = ir_builder.CreateICmpNE(
+      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
+  ir_builder.CreateCondBr(binary_cond, body_block, end_block);
+
+  ir_builder.SetInsertPoint(body_block);
+  sym_table.top_func_scope()->push_scope();
+  statement->codegen();
+  sym_table.top_func_scope()->pop_scope();
+  ir_builder.CreateBr(cond_block);
+
+  ir_builder.SetInsertPoint(end_block);
+  sym_table.top_func_scope()->pop_scope();
+}
+
 void jump_stmt::dump_tree() { cout << "- (jump_statement)" << endl; }
 
 return_stmt::return_stmt(expr *expression) { this->expression = expression; }

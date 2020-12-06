@@ -45,6 +45,7 @@ class if_stmt : public selection_stmt {
  public:
   if_stmt(expr *cond, stmt_node *then_stmt, stmt_node *else_stmt = nullptr);
   void dump_tree() override;
+  void codegen() override;
 };
 
 class iteration_stmt : public stmt_node {};

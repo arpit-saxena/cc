@@ -59,6 +59,47 @@ void if_stmt::dump_tree() {
   cout.unindent();
 }
 
+// condition, then_stmt, else_stmt
+void if_stmt::codegen() {
+  sym_table.top_func_scope()->push_scope();
+
+  value cond_val = condition->codegen();
+  llvm::Value *binary_cond = ir_builder.CreateICmpNE(
+      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
+
+  llvm::BasicBlock *then_block =
+      llvm::BasicBlock::Create(the_context, "then", sym_table.get_curr_func());
+  llvm::BasicBlock *else_block;
+  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
+      the_context, "if_end", sym_table.get_curr_func());
+
+  if (else_stmt) {
+    else_block = llvm::BasicBlock::Create(the_context, "else",
+                                          sym_table.get_curr_func());
+  } else {
+    else_block = end_block;
+  }
+
+  ir_builder.CreateCondBr(binary_cond, then_block, else_block);
+
+  ir_builder.SetInsertPoint(then_block);
+  sym_table.top_func_scope()->push_scope();
+  then_stmt->codegen();
+  sym_table.top_func_scope()->pop_scope();
+  ir_builder.CreateBr(end_block);
+
+  if (else_stmt) {
+    ir_builder.SetInsertPoint(else_block);
+    sym_table.top_func_scope()->push_scope();
+    else_stmt->codegen();
+    sym_table.top_func_scope()->pop_scope();
+    ir_builder.CreateBr(end_block);
+  }
+
+  ir_builder.SetInsertPoint(end_block);
+  sym_table.top_func_scope()->pop_scope();
+}
+
 while_stmt::while_stmt(expr *condition, stmt_node *statement)
     : condition(condition), statement(statement) {}
 

@@ -79,5 +79,6 @@
     "editor.formatOnSave": true,
     "C_Cpp.clang_format_fallbackStyle": "",
     "clang-format.language.cpp.style": "google",
-    "C_Cpp.default.cppStandard": "c++17"
+    "C_Cpp.default.cppStandard": "c++17",
+    "C_Cpp.default.configurationProvider": "go2sh.cmake-integration"
 }

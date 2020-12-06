@@ -36,7 +36,27 @@ class expression_stmt : public stmt_node {
 };
 
 class selection_stmt : public stmt_node {};
+
+class if_stmt : public selection_stmt {
+  expr *condition;
+  stmt_node *then_stmt;
+  stmt_node *else_stmt;  // Optional
+
+ public:
+  if_stmt(expr *cond, stmt_node *then_stmt, stmt_node *else_stmt = nullptr);
+  void dump_tree() override;
+};
+
 class iteration_stmt : public stmt_node {};
+
+class while_stmt : public iteration_stmt {
+  expr *condition;
+  stmt_node *statement;
+
+ public:
+  while_stmt(expr *condition, stmt_node *statement);
+  void dump_tree() override;
+};
 
 class jump_stmt : public stmt_node {
  public:

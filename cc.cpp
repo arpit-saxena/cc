@@ -15,9 +15,12 @@ void usage(poptContext context) { poptPrintUsage(context, stderr, 0); }
 int main(int argc, const char **argv) {
   int print_ast = 0;
   char *out_file_name = nullptr;
+  int no_codegen = 0;
   poptOption options_table[] = {
       {"print-ast", 'p', POPT_ARG_NONE, &print_ast, 0, "print ast",
        "print ast"},
+      {"no-codegen", 'n', POPT_ARG_NONE, &no_codegen, 0, "Dont' generate code",
+       "Don't generate code"},
       {nullptr, 'o', POPT_ARG_STRING, &out_file_name, 0,
        "base name of output .ll file", "outfile-basename"},
       POPT_AUTOHELP POPT_TABLEEND};
@@ -50,22 +53,23 @@ int main(int argc, const char **argv) {
     exit(2);
   }
 
-  std::string out_str;
-  if (!out_file_name) {
-    out_str = "a.ll";
-  } else {
-    out_str = out_file_name;
-    out_str += ".ll";
-  }
+  if (!no_codegen) {
+    std::string out_str;
+    if (!out_file_name) {
+      out_str = "a.ll";
+    } else {
+      out_str = out_file_name;
+      out_str += ".ll";
+    }
 
-  ast_node::base->codegen();
+    ast_node::base->codegen();
 
-  std::error_code err;
-  llvm::raw_fd_ostream file(out_str, err);
-  if (err) {
-    printf("An error occurred in opening file: %s\n", err.message().c_str());
-    return 2;
+    std::error_code err;
+    llvm::raw_fd_ostream file(out_str, err);
+    if (err) {
+      printf("An error occurred in opening file: %s\n", err.message().c_str());
+      return 2;
+    }
+    ast_node::the_module->print(file, nullptr);
   }
-  ast_node::the_module->print(file, nullptr);
-  exit(0);
 }

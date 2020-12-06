@@ -58,6 +58,8 @@ void yyerror(const char *s);
 %nterm <blk_item *> block_item
 %nterm <stmt_node *> statement
 %nterm <expression_stmt *> expression_statement
+%nterm <selection_stmt *> selection_statement
+%nterm <iteration_stmt *> iteration_statement
 %nterm <compound_stmt *> compound_statement block_item_list
 %nterm <jump_stmt *> jump_statement
 
@@ -558,13 +560,13 @@ expression_statement
 	;
 
 selection_statement
-	: IF '(' expression ')' statement ELSE statement
-	| IF '(' expression ')' statement
+	: IF '(' expression ')' statement ELSE statement {$$ = new if_stmt($3, $5, $7);}
+	| IF '(' expression ')' statement {$$ = new if_stmt($3, $5);}
 	| SWITCH '(' expression ')' statement
 	;
 
 iteration_statement
-	: WHILE '(' expression ')' statement
+	: WHILE '(' expression ')' statement {$$ = new while_stmt($3, $5);}
 	| DO statement WHILE '(' expression ')' ';'
 	| FOR '(' expression_statement expression_statement ')' statement
 	| FOR '(' expression_statement expression_statement expression ')' statement

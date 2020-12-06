@@ -47,6 +47,29 @@ void expression_stmt::codegen() {
   if (expression) expression->codegen();
 }
 
+if_stmt::if_stmt(expr *condition, stmt_node *then_stmt, stmt_node *else_stmt)
+    : condition(condition), then_stmt(then_stmt), else_stmt(else_stmt) {}
+
+void if_stmt::dump_tree() {
+  cout << "- (if_statement)" << endl;
+  cout.indent();
+  condition->dump_tree();
+  then_stmt->dump_tree();
+  if (else_stmt) else_stmt->dump_tree();
+  cout.unindent();
+}
+
+while_stmt::while_stmt(expr *condition, stmt_node *statement)
+    : condition(condition), statement(statement) {}
+
+void while_stmt::dump_tree() {
+  cout << "- (while_statement)" << endl;
+  cout.indent();
+  condition->dump_tree();
+  statement->dump_tree();
+  cout.unindent();
+}
+
 void jump_stmt::dump_tree() { cout << "- (jump_statement)" << endl; }
 
 return_stmt::return_stmt(expr *expression) { this->expression = expression; }

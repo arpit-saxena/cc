@@ -8,8 +8,8 @@ Stuff to do before submission
 - [x] Add string literal support (Also probably const support - Not done)
 - [x] Compile hello world
 - [ ] Add branching and control flow statements
-  - [ ] if
-  - [ ] while
+  - [x] if
+  - [x] while
   - [ ] goto (Maybe)
   - [ ] for (maybe)
 - [ ] Add local optimisations

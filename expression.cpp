@@ -138,6 +138,54 @@ void assign_expr_ops::dump_tree() {
   cout.unindent();
 }
 
+value assign_expr_ops::codegen() {
+  value right_val = right_expr->codegen();
+  value left_val = left_expr->codegen();
+  binary_expr_ops::OP bin_op;
+  switch (op) {
+    case MUL_ASSIGN:
+      bin_op = binary_expr_ops::MULT;
+      break;
+    case DIV_ASSIGN:
+      bin_op = binary_expr_ops::DIV;
+      break;
+    case MOD_ASSIGN:
+      bin_op = binary_expr_ops::MOD;
+      break;
+    case ADD_ASSIGN:
+      bin_op = binary_expr_ops::PLUS;
+      break;
+    case SUB_ASSIGN:
+      bin_op = binary_expr_ops::MINUS;
+      break;
+    case LEFT_ASSIGN:
+      bin_op = binary_expr_ops::SHIFT_LEFT;
+      break;
+    case RIGHT_ASSIGN:
+      bin_op = binary_expr_ops::SHIFT_RIGHT;
+      break;
+    case AND_ASSIGN:
+      bin_op = binary_expr_ops::BIT_AND;
+      break;
+    case XOR_ASSIGN:
+      bin_op = binary_expr_ops::BIT_XOR;
+      break;
+    case OR_ASSIGN:
+      bin_op = binary_expr_ops::BIT_OR;
+      break;
+    case ASSIGN:
+      break;
+    default:
+      raise_error("Undefined operator in assign_expr_ops");
+  }
+
+  if (op != ASSIGN) {  // => bin_op was assigned
+    right_val = binary_expr_ops::codegen(left_val, bin_op, right_val);
+  }
+
+  return left_expr->codegen_store(right_val);
+}
+
 cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
                              cond_expr *false_expr) {
   this->cond = cond;
@@ -622,6 +670,13 @@ value ident_expr::codegen() {
   }
 
   return create_load(val, identifier);
+}
+
+value ident_expr::codegen_store(value val) {
+  value var = sym_table.get_var(identifier);
+  convert_to_type(val, var.get_type());
+  ir_builder.CreateStore(val.llvm_val, var.llvm_val);
+  return val;
 }
 
 type_i ident_expr::get_type() {

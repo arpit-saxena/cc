@@ -75,6 +75,7 @@ class assign_expr_ops : public assign_expr {
   assign_expr_ops(unary_expr *left_expr, OP op, assign_expr *right_expr);
   static std::string op_string(OP op);
   void dump_tree() override;
+  value codegen() override;
 };
 
 class binary_expr;  // forward declaration
@@ -141,7 +142,20 @@ class binary_expr_ops : public binary_expr {
 };
 
 class cast_expr : public binary_expr {};
-class unary_expr : public cast_expr {};
+
+class unary_expr : public cast_expr {
+ public:
+  // For assignment expression for now. Might need to move this up the hierarchy
+  // in future. This is essentially a workaround for not having a rich value
+  // class. Ideally, it should know whether it is an lvalue or rvalue and how to
+  // perform stores
+  virtual value codegen_store(value val) {
+    raise_error("Codegen store not defined for expression");
+    // Ideally should be pure virtual but then will have to define this for all
+    // classes down the hierarchy.
+    // TODO: Make pure virtual, define for all lower classes
+  };
+};
 
 class unary_op_expr : public unary_expr {
  public:
@@ -192,6 +206,7 @@ class ident_expr : public primary_expr {
   ident_expr(const char *id);
   void dump_tree() override;
   value codegen() override;
+  value codegen_store(value val) override;
   type_i get_type() override;
 };
 

@@ -85,6 +85,7 @@ void yyerror(const char *s);
 
 %nterm <cond_expr *> conditional_expression
 %nterm <assign_expr *> assignment_expression
+%nterm <assign_expr_ops::OP> assignment_operator
 %nterm <expr *> expression
 
 %nterm <initializer_node *> initializer
@@ -240,21 +241,21 @@ conditional_expression
 
 assignment_expression
 	: conditional_expression {$$ = $1;}
-	| unary_expression assignment_operator assignment_expression
+	| unary_expression assignment_operator assignment_expression {$$ = new assign_expr_ops($1, $2, $3);}
 	;
 
 assignment_operator
-	: '='
-	| MUL_ASSIGN
-	| DIV_ASSIGN
-	| MOD_ASSIGN
-	| ADD_ASSIGN
-	| SUB_ASSIGN
-	| LEFT_ASSIGN
-	| RIGHT_ASSIGN
-	| AND_ASSIGN
-	| XOR_ASSIGN
-	| OR_ASSIGN
+	: '='		   {$$ = assign_expr_ops::ASSIGN;}
+	| MUL_ASSIGN   {$$ = assign_expr_ops::MUL_ASSIGN;}
+	| DIV_ASSIGN   {$$ = assign_expr_ops::DIV_ASSIGN;}
+	| MOD_ASSIGN   {$$ = assign_expr_ops::MOD_ASSIGN;}
+	| ADD_ASSIGN   {$$ = assign_expr_ops::ADD_ASSIGN;}
+	| SUB_ASSIGN   {$$ = assign_expr_ops::SUB_ASSIGN;}
+	| LEFT_ASSIGN  {$$ = assign_expr_ops::LEFT_ASSIGN;}
+	| RIGHT_ASSIGN {$$ = assign_expr_ops::RIGHT_ASSIGN;}
+	| AND_ASSIGN   {$$ = assign_expr_ops::AND_ASSIGN;}
+	| XOR_ASSIGN   {$$ = assign_expr_ops::XOR_ASSIGN;}
+	| OR_ASSIGN    {$$ = assign_expr_ops::OR_ASSIGN;}
 	;
 
 expression

@@ -95,6 +95,49 @@ type_i expr::get_common_type(expr *e1, expr *e2) {
   return get_common_type(e1->get_type(), e2->get_type());
 }
 
+assign_expr_ops::assign_expr_ops(unary_expr *left_expr, OP op,
+                                 assign_expr *right_expr) {
+  this->left_expr = left_expr;
+  this->op = op;
+  this->right_expr = right_expr;
+}
+
+std::string assign_expr_ops::op_string(OP op) {
+  switch (op) {
+    case ASSIGN:
+      return "=";
+    case MUL_ASSIGN:
+      return "*=";
+    case DIV_ASSIGN:
+      return "/=";
+    case MOD_ASSIGN:
+      return "%=";
+    case ADD_ASSIGN:
+      return "+=";
+    case SUB_ASSIGN:
+      return "-=";
+    case LEFT_ASSIGN:
+      return "<<=";
+    case RIGHT_ASSIGN:
+      return ">>=";
+    case AND_ASSIGN:
+      return "&=";
+    case XOR_ASSIGN:
+      return "^=";
+    case OR_ASSIGN:
+      return "|=";
+  }
+  return "unknown";
+}
+
+void assign_expr_ops::dump_tree() {
+  cout << "- (assignment_expression)" << endl;
+  left_expr->dump_tree();
+  cout << "- (assignment_operator) " << op_string(op) << endl;
+  right_expr->dump_tree();
+  cout.unindent();
+}
+
 cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
                              cond_expr *false_expr) {
   this->cond = cond;

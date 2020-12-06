@@ -48,6 +48,35 @@ class value_expr : public expr {
 
 class assign_expr : public expr {};
 
+class unary_expr;  // forward declaration
+
+class assign_expr_ops : public assign_expr {
+ public:
+  enum OP {
+    ASSIGN,        // '='
+    MUL_ASSIGN,    // '*='
+    DIV_ASSIGN,    // '/='
+    MOD_ASSIGN,    // '%='
+    ADD_ASSIGN,    // '+='
+    SUB_ASSIGN,    // '-='
+    LEFT_ASSIGN,   // '<<='
+    RIGHT_ASSIGN,  // '>>='
+    AND_ASSIGN,    // '&='
+    XOR_ASSIGN,    // '^='
+    OR_ASSIGN,     // '|='
+  };
+
+ private:
+  unary_expr *left_expr;
+  OP op;
+  assign_expr *right_expr;
+
+ public:
+  assign_expr_ops(unary_expr *left_expr, OP op, assign_expr *right_expr);
+  static std::string op_string(OP op);
+  void dump_tree() override;
+};
+
 class binary_expr;  // forward declaration
 
 class cond_expr : public assign_expr {};

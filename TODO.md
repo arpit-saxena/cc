@@ -10,7 +10,7 @@ Stuff to do before submission
 - [ ] Add branching and control flow statements
   - [x] if
   - [x] while
-  - [ ] goto (Maybe)
+  - [x] goto
   - [ ] for (maybe)
 - [ ] Add local optimisations
   - [ ] Constant folding

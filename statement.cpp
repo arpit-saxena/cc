@@ -12,7 +12,13 @@ void prefix_labeled_stmt::codegen() {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(the_context, identifier,
                                                      sym_table.get_curr_func());
   sym_table.top_func_scope()->add_label(identifier, block);
-  ir_builder.CreateBr(block);
+
+  if (ir_builder.GetInsertBlock()->empty()) {
+    ir_builder.GetInsertBlock()->eraseFromParent();
+  } else {
+    ir_builder.CreateBr(block);
+  }
+
   ir_builder.SetInsertPoint(block);
   statement->codegen();
 }

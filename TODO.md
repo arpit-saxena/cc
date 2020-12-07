@@ -16,3 +16,7 @@ Stuff to do before submission
   - [ ] Constant folding
     - [x] If constant condition, don't branch
   - [ ] Local dead-code removal
+    - [x] If const condition in if_stmt, don't generate new blocks
+- [ ] Invariant checking
+  - [ ] all codegen functions result in a non-terminated block in ir_builder
+- [ ] Add Tests through CMake's testing facility

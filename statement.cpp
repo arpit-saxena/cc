@@ -236,12 +236,12 @@ void return_stmt::codegen() {
         "non-void return type");
   }
 
-  if (ir_builder.GetInsertBlock()->getTerminator()) {
+  /* if (ir_builder.GetInsertBlock()->getTerminator()) {
     if (expression) {
       print_warning("Unreachable code");
     }
     return;
-  }
+  } */
 
   if (expression) {
     value ret = expression->codegen();

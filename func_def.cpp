@@ -44,7 +44,7 @@ void func_def::codegen() {
         print_warning(
             "No return statement in function with non-void return type");
       }
-      ir_builder.CreateRetVoid();
+      ir_builder.CreateRet(llvm::UndefValue::get(func->getReturnType()));
     }
   }
 

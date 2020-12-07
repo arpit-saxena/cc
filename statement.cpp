@@ -93,6 +93,16 @@ void if_stmt::codegen() {
   sym_table.top_func_scope()->push_scope();
 
   value cond_val = condition->codegen();
+
+  if (auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
+    if (const_cond->isZeroValue()) {
+      else_stmt->codegen();
+    } else {
+      then_stmt->codegen();
+    }
+    return;
+  }
+
   llvm::Value *binary_cond = ir_builder.CreateICmpNE(
       cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
 

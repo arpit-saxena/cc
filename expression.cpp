@@ -195,6 +195,15 @@ cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
 
 value cond_expr_ops::codegen() {
   value cond_val = cond->codegen();
+
+  if (auto *const_val = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
+    if (const_val->isZeroValue()) {
+      return false_expr->codegen();
+    } else {
+      return true_expr->codegen();
+    }
+  }
+
   sym_table.top_func_scope()->push_scope();
   value binary_cond = sym_table.add_var(ir_builder.getInt1Ty(), "cond");
   binary_cond.llvm_val = ir_builder.CreateICmpNE(

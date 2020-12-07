@@ -13,7 +13,9 @@ void prefix_labeled_stmt::codegen() {
                                                      sym_table.get_curr_func());
   sym_table.top_func_scope()->add_label(identifier, block);
 
-  if (ir_builder.GetInsertBlock()->empty()) {
+  llvm::BasicBlock *insert_block = ir_builder.GetInsertBlock();
+  if (insert_block->empty()) {
+    insert_block->replaceAllUsesWith(block);
     ir_builder.GetInsertBlock()->eraseFromParent();
   } else {
     ir_builder.CreateBr(block);
@@ -51,6 +53,7 @@ void compound_stmt::dump_tree() {
 }
 
 void compound_stmt::codegen() {
+  auto s = sym_table.top_func_scope()->new_scope();
   for (auto *item : block_items) {
     item->codegen();
   }
@@ -90,14 +93,16 @@ void if_stmt::dump_tree() {
 
 // condition, then_stmt, else_stmt
 void if_stmt::codegen() {
-  sym_table.top_func_scope()->push_scope();
+  auto s = sym_table.top_func_scope()->new_scope();
 
   value cond_val = condition->codegen();
 
   if (auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
-    if (const_cond->isZeroValue()) {
+    if (const_cond->isZeroValue() && else_stmt) {
+      auto s = sym_table.top_func_scope()->new_scope();
       else_stmt->codegen();
     } else {
+      auto s = sym_table.top_func_scope()->new_scope();
       then_stmt->codegen();
     }
     return;
@@ -119,30 +124,29 @@ void if_stmt::codegen() {
     else_block = end_block;
   }
 
-  ir_builder.CreateCondBr(binary_cond, then_block, else_block);
+  auto inst = ir_builder.CreateCondBr(binary_cond, then_block, else_block);
 
-  ir_builder.SetInsertPoint(then_block);
-  sym_table.top_func_scope()->push_scope();
-  then_stmt->codegen();
-  sym_table.top_func_scope()->pop_scope();
+  {  // New scope
+    auto s = sym_table.top_func_scope()->new_scope();
 
-  if (!ir_builder.GetInsertBlock()->getTerminator()) {
-    ir_builder.CreateBr(end_block);
+    ir_builder.SetInsertPoint(then_block);
+    then_stmt->codegen();
+    if (!ir_builder.GetInsertBlock()->getTerminator()) {
+      ir_builder.CreateBr(end_block);
+    }
   }
 
   if (else_stmt) {
-    ir_builder.SetInsertPoint(else_block);
-    sym_table.top_func_scope()->push_scope();
-    else_stmt->codegen();
-    sym_table.top_func_scope()->pop_scope();
+    auto s = sym_table.top_func_scope()->new_scope();
 
+    ir_builder.SetInsertPoint(else_block);
+    else_stmt->codegen();
     if (!ir_builder.GetInsertBlock()->getTerminator()) {
       ir_builder.CreateBr(end_block);
     }
   }
 
   ir_builder.SetInsertPoint(end_block);
-  sym_table.top_func_scope()->pop_scope();
 }
 
 while_stmt::while_stmt(expr *condition, stmt_node *statement)
@@ -157,7 +161,7 @@ void while_stmt::dump_tree() {
 }
 
 void while_stmt::codegen() {
-  sym_table.top_func_scope()->push_scope();
+  auto s = sym_table.top_func_scope()->new_scope();
 
   llvm::BasicBlock *cond_block = llvm::BasicBlock::Create(
       the_context, "while_cond", sym_table.get_curr_func());
@@ -174,14 +178,15 @@ void while_stmt::codegen() {
       cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
   ir_builder.CreateCondBr(binary_cond, body_block, end_block);
 
-  ir_builder.SetInsertPoint(body_block);
-  sym_table.top_func_scope()->push_scope();
-  statement->codegen();
-  sym_table.top_func_scope()->pop_scope();
-  ir_builder.CreateBr(cond_block);
+  {  // New scope
+    auto s = sym_table.top_func_scope()->new_scope();
+
+    ir_builder.SetInsertPoint(body_block);
+    statement->codegen();
+    ir_builder.CreateBr(cond_block);
+  }
 
   ir_builder.SetInsertPoint(end_block);
-  sym_table.top_func_scope()->pop_scope();
 }
 
 goto_stmt::goto_stmt(const char *ident) {
@@ -197,8 +202,8 @@ void goto_stmt::dump_tree() {
 }
 
 void goto_stmt::codegen() {
-  auto next_block =
-      llvm::BasicBlock::Create(the_context, "", sym_table.get_curr_func());
+  auto next_block = llvm::BasicBlock::Create(the_context, "goto_end",
+                                             sym_table.get_curr_func());
   sym_table.top_func_scope()->add_goto_inst(identifier, &ir_builder,
                                             next_block);
 }
@@ -245,4 +250,8 @@ void return_stmt::codegen() {
   } else {
     ir_builder.CreateRetVoid();
   }
+
+  auto next_block = llvm::BasicBlock::Create(the_context, "return_end",
+                                             sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(next_block);
 }

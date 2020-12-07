@@ -204,11 +204,16 @@ value cond_expr_ops::codegen() {
     }
   }
 
-  sym_table.top_func_scope()->push_scope();
-  value binary_cond = sym_table.add_var(ir_builder.getInt1Ty(), "cond");
-  binary_cond.llvm_val = ir_builder.CreateICmpNE(
-      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
-  sym_table.top_func_scope()->pop_scope();
+  value binary_cond;
+  {  // New scope
+    auto s = sym_table.top_func_scope()->new_scope();
+
+    binary_cond = sym_table.add_var(ir_builder.getInt1Ty(), "cond");
+    binary_cond.llvm_val = ir_builder.CreateICmpNE(
+        cond_val.llvm_val,
+        const_expr::get_val(0, cond_val.get_type()).llvm_val);
+  }
+
   return codegen(binary_cond, true_expr, false_expr);
 }
 
@@ -224,23 +229,26 @@ value cond_expr_ops::codegen(value cond_val, expr *true_expr,
     }
   }
 
-  sym_table.top_func_scope()->push_scope();
-  value result = sym_table.add_var(res_type, "res");
+  llvm::BasicBlock *curr_block, *true_block, *false_block, *next_block;
+  value result, ret;
+  {  // New scope
+    auto s = sym_table.top_func_scope()->new_scope();
 
-  llvm::BasicBlock *curr_block = ir_builder.GetInsertBlock();
+    result = sym_table.add_var(res_type, "res");
 
-  llvm::BasicBlock *true_block =
-      llvm::BasicBlock::Create(the_context, "true", sym_table.get_curr_func());
-  llvm::BasicBlock *false_block =
-      llvm::BasicBlock::Create(the_context, "false", sym_table.get_curr_func());
-  ir_builder.CreateCondBr(cond_val.llvm_val, true_block, false_block);
-  llvm::BasicBlock *next_block = llvm::BasicBlock::Create(
-      the_context, "cond_end", sym_table.get_curr_func());
+    curr_block = ir_builder.GetInsertBlock();
 
-  ir_builder.SetInsertPoint(next_block);
-  value ret = create_load(result, "res");
+    true_block = llvm::BasicBlock::Create(the_context, "true",
+                                          sym_table.get_curr_func());
+    false_block = llvm::BasicBlock::Create(the_context, "false",
+                                           sym_table.get_curr_func());
+    ir_builder.CreateCondBr(cond_val.llvm_val, true_block, false_block);
+    next_block = llvm::BasicBlock::Create(the_context, "cond_end",
+                                          sym_table.get_curr_func());
 
-  sym_table.top_func_scope()->pop_scope();
+    ir_builder.SetInsertPoint(next_block);
+    ret = create_load(result, "res");
+  }
 
   ir_builder.SetInsertPoint(true_block);
   value true_val = true_expr->codegen();

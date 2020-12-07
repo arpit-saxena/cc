@@ -61,6 +61,9 @@ class func_scope {
   std::unordered_multimap<std::string, llvm::BranchInst *> pending_gotos;
   std::unordered_map<std::string, llvm::BasicBlock *> label_blocks;
 
+  void push_scope();
+  void pop_scope();
+
  public:
   func_scope(llvm::Function *func);
   func_scope(llvm::IRBuilder<> *builder);
@@ -76,8 +79,16 @@ class func_scope {
 
   void add_block_terminator(llvm::Instruction *ins);
 
-  void push_scope();
-  void pop_scope();
+  // This class' constructor pushes new scope and its destructor pops the scope
+  class auto_scope {
+    func_scope *s;
+
+   public:
+    auto_scope(func_scope *s) : s(s) { s->push_scope(); }
+    ~auto_scope() { s->pop_scope(); }
+  };
+
+  auto_scope new_scope() { return auto_scope(this); }
 
   // Add a label with the given name to the function. Raises an error if the
   // label already exists

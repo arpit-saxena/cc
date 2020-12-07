@@ -32,5 +32,4 @@ value ast_node::create_load(value val, std::string identifier) {
 
   val.llvm_val = ir_builder.CreateLoad(val.llvm_val, identifier);
   return val;
-  llvm::Value *llvm_val = val.llvm_val;
 }

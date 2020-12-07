@@ -34,10 +34,11 @@ void func_def::codegen() {
 
   statement->codegen();
 
-  if (!ir_builder.GetInsertBlock()->getTerminator()) {
-    if (ir_builder.GetInsertBlock()->empty()) {
-      // Empty basic block. Remove it
-      ir_builder.GetInsertBlock()->eraseFromParent();
+  llvm::BasicBlock *insert_block = ir_builder.GetInsertBlock();
+  if (!insert_block->getTerminator()) {
+    if (insert_block->empty() && insert_block->use_empty()) {
+      // Empty basic block with no uses. Remove it
+      insert_block->eraseFromParent();
     } else {
       if (!decl_specs->get_type().llvm_type->isVoidTy()) {
         print_warning(

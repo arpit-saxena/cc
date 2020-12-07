@@ -35,3 +35,7 @@ llvm_map_components_to_libnames(llvm_libs core)
 
 # Link against LLVM libraries
 target_link_libraries(cc ${llvm_libs} ${POPT_LIBRARY})
+
+enable_testing()
+
+add_subdirectory(tests)

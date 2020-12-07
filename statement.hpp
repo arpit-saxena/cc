@@ -15,11 +15,7 @@ class stmt_node : public blk_item {
   }  // TODO: Make pure virtual
 };
 
-class labeled_stmt : public stmt_node {
- protected:
-  std::vector<llvm::Value *> saved_scope;
-  void save_scope();
-};
+class labeled_stmt : public stmt_node {};
 
 // The type other than case or default
 // TODO : Think of a better name

@@ -2,12 +2,6 @@
 
 void stmt_node::dump_tree() { cout << "- (statement)" << endl; }
 
-void labeled_stmt::save_scope() {
-  // This has to be a function scope because the grammar doesn't allow
-  // statements in the global scope
-  saved_scope = sym_table.top_func_scope()->get_all_vars();
-}
-
 prefix_labeled_stmt::prefix_labeled_stmt(const char *ident, stmt_node *stmt) {
   identifier = std::string(ident);
   free((void *)ident);
@@ -18,7 +12,6 @@ void prefix_labeled_stmt::codegen() {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(the_context, identifier,
                                                      sym_table.get_curr_func());
   sym_table.top_func_scope()->add_label(identifier, block);
-  save_scope();
   ir_builder.CreateBr(block);
   ir_builder.SetInsertPoint(block);
   statement->codegen();

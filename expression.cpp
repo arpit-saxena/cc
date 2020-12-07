@@ -207,6 +207,14 @@ value cond_expr_ops::codegen(value cond_val, expr *true_expr,
                              expr *false_expr) {
   type_i res_type = get_common_type(true_expr, false_expr);
 
+  if (auto *const_val = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
+    if (const_val->isZeroValue()) {
+      return false_expr->codegen();
+    } else {
+      return true_expr->codegen();
+    }
+  }
+
   sym_table.top_func_scope()->push_scope();
   value result = sym_table.add_var(res_type, "res");
 

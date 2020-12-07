@@ -18,5 +18,8 @@ then
     # Assuming this has been compiled by cmake
     cc_out=$($exec_name)
 
+    echo "My output: $my_out"
+    echo "gcc output: $cc_out"
+
     test "$my_out" == "$cc_out"
 fi

@@ -7,7 +7,7 @@ foreach(file ${files})
 	add_executable(${file_without_ext} ${file})
 	add_test(
         NAME ${file_without_ext}
-        COMMAND ../test.sh "$<TARGET_FILE:${file_without_ext}> ${only_compile}"
+        COMMAND ../test.sh "$<TARGET_FILE:${file_without_ext}>" ${only_compile}
     )
     add_dependencies(${file_without_ext} cc)
 	set_tests_properties(${file_without_ext}

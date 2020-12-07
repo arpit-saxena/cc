@@ -2,6 +2,29 @@
 
 void stmt_node::dump_tree() { cout << "- (statement)" << endl; }
 
+common_labeled_stmt::common_labeled_stmt(const char *ident, stmt_node *stmt) {
+  identifier = std::string(ident);
+  free((void *)ident);
+  statement = stmt;
+}
+
+void common_labeled_stmt::codegen() {
+  llvm::BasicBlock *block = llvm::BasicBlock::Create(the_context, identifier,
+                                                     sym_table.get_curr_func());
+  sym_table.top_func_scope()->add_label(identifier, block);
+  ir_builder.CreateBr(block);
+  ir_builder.SetInsertPoint(block);
+  statement->codegen();
+}
+
+void common_labeled_stmt::dump_tree() {
+  cout << "- (labeled_statement)" << endl;
+  cout.indent();
+  cout << "- (label) " << identifier << endl;
+  statement->dump_tree();
+  cout.unindent();
+}
+
 compound_stmt *compound_stmt::add(blk_item *item) {
   block_items.push_back(item);
   return this;

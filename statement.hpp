@@ -17,6 +17,18 @@ class stmt_node : public blk_item {
 
 class labeled_stmt : public stmt_node {};
 
+// The type other than case or default
+// TODO : Think of a better name
+class common_labeled_stmt : public labeled_stmt {
+  std::string identifier;
+  stmt_node *statement;
+
+ public:
+  common_labeled_stmt(const char *ident, stmt_node *stmt);
+  void dump_tree() override;
+  void codegen() override;
+};
+
 class compound_stmt : public stmt_node {
   std::vector<blk_item *> block_items;
 

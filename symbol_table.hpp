@@ -49,10 +49,12 @@ class scope {
   value add_val(value val, std::string name);
   bool check_var(std::string name);
   value get_var(std::string name);
+  llvm::IRBuilder<> *get_builder();
 };
 
 class func_scope {
   std::vector<scope> scopes;
+  scope labels_scope;  // For storing labels
   llvm::IRBuilder<> *builder;
   bool own_builder;
   llvm::Function *func;
@@ -74,6 +76,13 @@ class func_scope {
 
   void push_scope();
   void pop_scope();
+
+  // Add a label with the given name to the function. Raises an error if the
+  // label already exists
+  void add_label(std::string name, llvm::BasicBlock *block);
+
+  // Get label with the given name. Returns nullptr if the label is not present
+  llvm::BasicBlock *get_label(std::string name);
 
   // Searches all scopes from top to bottom for variable defined by name.
   value get_var(std::string name);

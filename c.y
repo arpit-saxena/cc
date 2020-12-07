@@ -57,6 +57,7 @@ void yyerror(const char *s);
 %nterm <trans_unit *> translation_unit
 %nterm <blk_item *> block_item
 %nterm <stmt_node *> statement
+%nterm <labeled_stmt *> labeled_statement
 %nterm <expression_stmt *> expression_statement
 %nterm <selection_stmt *> selection_statement
 %nterm <iteration_stmt *> iteration_statement
@@ -526,7 +527,7 @@ static_assert_declaration
 	;
 
 statement
-	: labeled_statement
+	: labeled_statement {$$ = $1;}
 	| compound_statement {$$ = $1;}
 	| expression_statement {$$ = $1;}
 	| selection_statement {$$ = $1;}
@@ -535,7 +536,7 @@ statement
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement
+	: IDENTIFIER ':' statement {$$ = new common_labeled_stmt($1, $3);}
 	| CASE constant_expression ':' statement
 	| DEFAULT ':' statement
 	;

@@ -58,7 +58,7 @@ int main(int argc, const char **argv) {
   }
 
   if (ret != 0) {
-    printf("Parse failed. No output file written");
+    printf("Parse failed. No output file written\n");
     exit(2);
   }
 

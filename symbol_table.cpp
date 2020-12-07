@@ -46,15 +46,22 @@ value scope::get_var(std::string name) {
   return it->second;
 }
 
-func_scope::func_scope(llvm::Function *func) {
+llvm::IRBuilder<> *scope::get_builder() { return builder; }
+
+llvm::IRBuilder<> *make_builder(llvm::Function *func) {
+  return new llvm::IRBuilder<>(&func->getEntryBlock(),
+                               func->getEntryBlock().begin());
+}
+
+func_scope::func_scope(llvm::Function *func)
+    : labels_scope(make_builder(func)) {
   this->func = func;
-  builder = new llvm::IRBuilder<>(&func->getEntryBlock(),
-                                  func->getEntryBlock().begin());
+  builder = labels_scope.get_builder();
   own_builder = true;
   scopes.emplace_back(builder);
 }
 
-func_scope::func_scope(llvm::IRBuilder<> *builder) {
+func_scope::func_scope(llvm::IRBuilder<> *builder) : labels_scope(builder) {
   this->func = func;
   this->builder = builder;
   own_builder = false;
@@ -103,6 +110,19 @@ void func_scope::add_block_terminator(llvm::Instruction *ins) {
 void func_scope::push_scope() { scopes.emplace_back(builder); }
 
 void func_scope::pop_scope() { scopes.pop_back(); }
+
+void func_scope::add_label(std::string name, llvm::BasicBlock *block) {
+  if (labels_scope.check_var(name)) {
+    ast_node::raise_error("Label names must be unique in a function!");
+  }
+
+  labels_scope.add_val(value(block, true), name);
+}
+
+llvm::BasicBlock *func_scope::get_label(std::string name) {
+  value label_val = labels_scope.get_var(name);
+  return llvm::dyn_cast_or_null<llvm::BasicBlock>(label_val.llvm_val);
+}
 
 value func_scope::get_var(std::string name) {
   for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {

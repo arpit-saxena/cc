@@ -13,3 +13,6 @@ Stuff to do before submission
   - [ ] goto (Maybe)
   - [ ] for (maybe)
 - [ ] Add local optimisations
+  - [ ] Constant folding
+    - [x] If constant condition, don't branch
+  - [ ] Local dead-code removal

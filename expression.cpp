@@ -274,7 +274,7 @@ type_i cond_expr_ops::get_type() {
   return get_common_type(true_expr->get_type(), false_expr->get_type());
 }
 
-binary_expr_ops::binary_expr_ops(binary_expr *left, OP op, binary_expr *right) {
+binary_expr_ops::binary_expr_ops(expr *left, OP op, expr *right) {
   this->left_expr = left;
   this->op = op;
   this->right_expr = right;
@@ -427,14 +427,15 @@ value binary_expr_ops::codegen(expr *lhs_expr, OP op, expr *rhs_expr) {
     case AND: {
       lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
       value_expr false_expr(zero_val);
-      value val = cond_expr_ops::codegen(lhs, rhs_expr, &false_expr);
-      return binary_expr_ops::codegen(val, binary_expr_ops::NE, zero_val);
+      binary_expr_ops rhs_expr_bool(rhs_expr, binary_expr_ops::NE, &false_expr);
+      return cond_expr_ops::codegen(lhs, &rhs_expr_bool, &false_expr);
     }
     case OR: {
       lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
       value_expr true_expr(one_val);
-      value val = cond_expr_ops::codegen(lhs, &true_expr, rhs_expr);
-      return binary_expr_ops::codegen(val, binary_expr_ops::NE, zero_val);
+      value_expr false_expr(zero_val);
+      binary_expr_ops rhs_expr_bool(rhs_expr, binary_expr_ops::NE, &false_expr);
+      return cond_expr_ops::codegen(lhs, &true_expr, rhs_expr);
     }
   }
 

@@ -124,15 +124,15 @@ class binary_expr_ops : public binary_expr {
   };
 
  private:
-  binary_expr *left_expr;
+  expr *left_expr;
   OP op;
-  binary_expr *right_expr;
+  expr *right_expr;
   static llvm::Instruction::BinaryOps get_arith_op(value &lhs, value &rhs,
                                                    OP op);
   static llvm::CmpInst::Predicate get_cmp_pred(value &lhs, value &rhs, OP op);
 
  public:
-  binary_expr_ops(binary_expr *left, OP op, binary_expr *right);
+  binary_expr_ops(expr *left, OP op, expr *right);
   static std::string op_string(OP op);
   virtual void dump_tree() override;
   value codegen() override;

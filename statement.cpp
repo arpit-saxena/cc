@@ -180,7 +180,12 @@ void goto_stmt::dump_tree() {
   cout.unindent();
 }
 
-void goto_stmt::codegen() {}
+void goto_stmt::codegen() {
+  auto next_block =
+      llvm::BasicBlock::Create(the_context, "", sym_table.get_curr_func());
+  sym_table.top_func_scope()->add_goto_inst(identifier, &ir_builder,
+                                            next_block);
+}
 
 return_stmt::return_stmt(expr *expression) { this->expression = expression; }
 

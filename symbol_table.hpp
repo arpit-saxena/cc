@@ -54,10 +54,12 @@ class scope {
 
 class func_scope {
   std::vector<scope> scopes;
-  scope labels_scope;  // For storing labels
   llvm::IRBuilder<> *builder;
   bool own_builder;
   llvm::Function *func;
+
+  std::unordered_multimap<std::string, llvm::BranchInst *> pending_gotos;
+  std::unordered_map<std::string, llvm::BasicBlock *> label_blocks;
 
  public:
   func_scope(llvm::Function *func);
@@ -81,8 +83,11 @@ class func_scope {
   // label already exists
   void add_label(std::string name, llvm::BasicBlock *block);
 
-  // Get label with the given name. Returns nullptr if the label is not present
-  llvm::BasicBlock *get_label(std::string name);
+  // Adds a goto instruction through the given builder. If the label is not
+  // found yet, the instruction is added to a list of pending instructions and
+  // are updated when the label is added
+  void add_goto_inst(std::string name, llvm::IRBuilder<> *builder,
+                     llvm::BasicBlock *next_block);
 
   // Searches all scopes from top to bottom for variable defined by name.
   value get_var(std::string name);

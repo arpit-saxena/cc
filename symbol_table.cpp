@@ -53,15 +53,14 @@ llvm::IRBuilder<> *make_builder(llvm::Function *func) {
                                func->getEntryBlock().begin());
 }
 
-func_scope::func_scope(llvm::Function *func)
-    : labels_scope(make_builder(func)) {
+func_scope::func_scope(llvm::Function *func) {
   this->func = func;
-  builder = labels_scope.get_builder();
+  builder = make_builder(func);
   own_builder = true;
   scopes.emplace_back(builder);
 }
 
-func_scope::func_scope(llvm::IRBuilder<> *builder) : labels_scope(builder) {
+func_scope::func_scope(llvm::IRBuilder<> *builder) {
   this->func = func;
   this->builder = builder;
   own_builder = false;
@@ -71,6 +70,10 @@ func_scope::func_scope(llvm::IRBuilder<> *builder) : labels_scope(builder) {
 func_scope::~func_scope() {
   if (own_builder) {
     delete builder;
+  }
+
+  if (!pending_gotos.empty()) {
+    ast_node::raise_error("goto instructions to undefined labels present!");
   }
 }
 
@@ -112,16 +115,34 @@ void func_scope::push_scope() { scopes.emplace_back(builder); }
 void func_scope::pop_scope() { scopes.pop_back(); }
 
 void func_scope::add_label(std::string name, llvm::BasicBlock *block) {
-  if (labels_scope.check_var(name)) {
-    ast_node::raise_error("Label names must be unique in a function!");
+  if (label_blocks.count(name)) {
+    ast_node::raise_error(
+        "Multiple labels with same name in a function are not allowed!");
   }
 
-  labels_scope.add_val(value(block, true), name);
+  label_blocks[name] = block;
+
+  auto range = pending_gotos.equal_range(name);
+  for (auto it = range.first; it != range.second; ++it) {
+    // This branch instruction is an unconditional branch
+    it->second->setSuccessor(0, block);
+  }
+  pending_gotos.erase(name);
 }
 
-llvm::BasicBlock *func_scope::get_label(std::string name) {
-  value label_val = labels_scope.get_var(name);
-  return llvm::dyn_cast_or_null<llvm::BasicBlock>(label_val.llvm_val);
+void func_scope::add_goto_inst(std::string name, llvm::IRBuilder<> *builder,
+                               llvm::BasicBlock *next_block) {
+  // Temporary destination
+  llvm::BranchInst *branch = builder->CreateBr(builder->GetInsertBlock());
+  builder->SetInsertPoint(next_block);
+
+  auto it = label_blocks.find(name);
+  if (it == label_blocks.end()) {
+    pending_gotos.insert({name, branch});
+  } else {
+    llvm::BasicBlock *dest_block = it->second;
+    branch->setSuccessor(0, dest_block);
+  }
 }
 
 value func_scope::get_var(std::string name) {

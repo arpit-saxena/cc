@@ -50,6 +50,9 @@ class scope {
   bool check_var(std::string name);
   value get_var(std::string name);
   llvm::IRBuilder<> *get_builder();
+  // Used to save scope in labeled statement so goto's constraints can be
+  // checked
+  std::vector<llvm::Value *> get_all_vars();
 };
 
 class func_scope {
@@ -86,6 +89,10 @@ class func_scope {
 
   // Searches all scopes from top to bottom for variable defined by name.
   value get_var(std::string name);
+
+  // Return all values stored in all scopes in this function
+  // Used to save scope in labeled statement to check goto's constraints
+  std::vector<llvm::Value *> get_all_vars();
 };
 
 class symbol_table {

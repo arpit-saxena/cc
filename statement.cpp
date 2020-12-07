@@ -2,22 +2,29 @@
 
 void stmt_node::dump_tree() { cout << "- (statement)" << endl; }
 
-common_labeled_stmt::common_labeled_stmt(const char *ident, stmt_node *stmt) {
+void labeled_stmt::save_scope() {
+  // This has to be a function scope because the grammar doesn't allow
+  // statements in the global scope
+  saved_scope = sym_table.top_func_scope()->get_all_vars();
+}
+
+prefix_labeled_stmt::prefix_labeled_stmt(const char *ident, stmt_node *stmt) {
   identifier = std::string(ident);
   free((void *)ident);
   statement = stmt;
 }
 
-void common_labeled_stmt::codegen() {
+void prefix_labeled_stmt::codegen() {
   llvm::BasicBlock *block = llvm::BasicBlock::Create(the_context, identifier,
                                                      sym_table.get_curr_func());
   sym_table.top_func_scope()->add_label(identifier, block);
+  save_scope();
   ir_builder.CreateBr(block);
   ir_builder.SetInsertPoint(block);
   statement->codegen();
 }
 
-void common_labeled_stmt::dump_tree() {
+void prefix_labeled_stmt::dump_tree() {
   cout << "- (labeled_statement)" << endl;
   cout.indent();
   cout << "- (label) " << identifier << endl;
@@ -168,7 +175,19 @@ void while_stmt::codegen() {
   sym_table.top_func_scope()->pop_scope();
 }
 
-void jump_stmt::dump_tree() { cout << "- (jump_statement)" << endl; }
+goto_stmt::goto_stmt(const char *ident) {
+  identifier = std::string(ident);
+  free((void *)ident);
+}
+
+void goto_stmt::dump_tree() {
+  cout << "- (jump_statement) goto" << endl;
+  cout.indent();
+  cout << "- " << identifier << endl;
+  cout.unindent();
+}
+
+void goto_stmt::codegen() {}
 
 return_stmt::return_stmt(expr *expression) { this->expression = expression; }
 

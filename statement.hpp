@@ -15,16 +15,20 @@ class stmt_node : public blk_item {
   }  // TODO: Make pure virtual
 };
 
-class labeled_stmt : public stmt_node {};
+class labeled_stmt : public stmt_node {
+ protected:
+  std::vector<llvm::Value *> saved_scope;
+  void save_scope();
+};
 
 // The type other than case or default
 // TODO : Think of a better name
-class common_labeled_stmt : public labeled_stmt {
+class prefix_labeled_stmt : public labeled_stmt {
   std::string identifier;
   stmt_node *statement;
 
  public:
-  common_labeled_stmt(const char *ident, stmt_node *stmt);
+  prefix_labeled_stmt(const char *ident, stmt_node *stmt);
   void dump_tree() override;
   void codegen() override;
 };
@@ -72,9 +76,15 @@ class while_stmt : public iteration_stmt {
   void codegen() override;
 };
 
-class jump_stmt : public stmt_node {
+class jump_stmt : public stmt_node {};
+
+class goto_stmt : public jump_stmt {
+  std::string identifier;
+
  public:
+  goto_stmt(const char *ident);
   void dump_tree() override;
+  void codegen() override;
 };
 
 class return_stmt : public jump_stmt {

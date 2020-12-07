@@ -536,7 +536,7 @@ statement
 	;
 
 labeled_statement
-	: IDENTIFIER ':' statement {$$ = new common_labeled_stmt($1, $3);}
+	: IDENTIFIER ':' statement {$$ = new prefix_labeled_stmt($1, $3);}
 	| CASE constant_expression ':' statement
 	| DEFAULT ':' statement
 	;
@@ -577,7 +577,7 @@ iteration_statement
 	;
 
 jump_statement
-	: GOTO IDENTIFIER ';'
+	: GOTO IDENTIFIER ';' {$$ = new goto_stmt($2);}
 	| CONTINUE ';'
 	| BREAK ';'
 	| RETURN ';' {$$ = new return_stmt();}

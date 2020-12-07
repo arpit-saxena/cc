@@ -48,6 +48,18 @@ value scope::get_var(std::string name) {
 
 llvm::IRBuilder<> *scope::get_builder() { return builder; }
 
+std::vector<llvm::Value *> scope::get_all_vars() {
+  std::vector<llvm::Value *> vars;
+  vars.reserve(variables.size());
+
+  std::transform(variables.begin(), variables.end(), std::back_inserter(vars),
+                 [](std::pair<std::string, value> variable) {
+                   return variable.second.llvm_val;
+                 });
+
+  return vars;
+}
+
 llvm::IRBuilder<> *make_builder(llvm::Function *func) {
   return new llvm::IRBuilder<>(&func->getEntryBlock(),
                                func->getEntryBlock().begin());
@@ -130,6 +142,15 @@ value func_scope::get_var(std::string name) {
     if (val.llvm_val) return val;
   }
   return value::null;
+}
+
+std::vector<llvm::Value *> func_scope::get_all_vars() {
+  std::vector<llvm::Value *> ret;
+  for (auto &scope : scopes) {
+    auto vars = scope.get_all_vars();
+    ret.insert(ret.end(), vars.begin(), vars.end());
+  }
+  return ret;
 }
 
 symbol_table::symbol_table(llvm::IRBuilder<> &global_builder)

@@ -304,6 +304,7 @@ llvm::Type *type_specifiers::get_llvm_type() {
   }
   print_warning(
       "Cannot be converted to llvm Type. Either not set or incomplete");
+  cout << "Current type is " << type_specifiers(specs).to_string() << endl;
   return nullptr;
 }
 

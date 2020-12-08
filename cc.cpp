@@ -18,6 +18,8 @@ int main(int argc, const char **argv) {
   int no_codegen = 0;
   char *t;
   poptOption options_table[] = {
+      {"debug", 'd', POPT_ARG_NONE, &yydebug, 0, "Enable bison debugging",
+       "debug-bison"},
       {"print-ast", 'p', POPT_ARG_NONE, &print_ast, 0,
        "Prints generated ast. Also disables code generation", "print ast"},
       {"no-codegen", 'n', POPT_ARG_NONE, &no_codegen, 0,

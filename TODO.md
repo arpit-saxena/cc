@@ -20,3 +20,4 @@ Stuff to do before submission
 - [ ] Invariant checking
   - [ ] all codegen functions result in a non-terminated block in ir_builder
 - [x] Add Tests through CMake's testing facility
+  - [ ] Add way to add files which are guaranteed to not compile

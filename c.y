@@ -21,6 +21,13 @@ void yyerror(const char *s);
 	#include "declaration.hpp"
 }
 
+%{
+#include "ast.hpp"
+void unimplemented [[noreturn]] () {
+	ast_node::raise_error("Unimplemented grammar rule!");
+}
+%}
+
 %define api.value.type union
 %define parse.trace
 
@@ -103,22 +110,22 @@ primary_expression
 	| constant {$$ = $1;}
 	| string {$$ = $1;}
 	| '(' expression ')' {$$ = new paren_expr($2);}
-	| generic_selection
+	| generic_selection {unimplemented();}
 	;
 
 constant
 	: I_CONSTANT {$$ = const_expr::new_int_expr($1);}		/* includes character_constant */
-	| F_CONSTANT
-	| ENUMERATION_CONSTANT	/* after it has been defined as such */
+	| F_CONSTANT {unimplemented();}
+	| ENUMERATION_CONSTANT {unimplemented();}	/* after it has been defined as such */
 	;
 
 enumeration_constant		/* before it has been defined as such */
-	: IDENTIFIER
+	: IDENTIFIER {unimplemented();}
 	;
 
 string
 	: STRING_LITERAL {$$ = new string_expr($1);}
-	| FUNC_NAME
+	| FUNC_NAME {unimplemented();}
 	;
 
 generic_selection
@@ -126,26 +133,26 @@ generic_selection
 	;
 
 generic_assoc_list
-	: generic_association
-	| generic_assoc_list ',' generic_association
+	: generic_association {unimplemented();}
+	| generic_assoc_list ',' generic_association {unimplemented();}
 	;
 
 generic_association
-	: type_name ':' assignment_expression
-	| DEFAULT ':' assignment_expression
+	: type_name ':' assignment_expression {unimplemented();}
+	| DEFAULT ':' assignment_expression {unimplemented();}
 	;
 
 postfix_expression
 	: primary_expression {$$ = $1;}
-	| postfix_expression '[' expression ']'
+	| postfix_expression '[' expression ']' {unimplemented();}
 	| postfix_expression '(' ')' {$$ = new func_call($1);}
 	| postfix_expression '(' argument_expression_list ')' {$$ = new func_call($1, $3);}
-	| postfix_expression '.' IDENTIFIER
-	| postfix_expression PTR_OP IDENTIFIER
-	| postfix_expression INC_OP
-	| postfix_expression DEC_OP
-	| '(' type_name ')' '{' initializer_list '}'
-	| '(' type_name ')' '{' initializer_list ',' '}'
+	| postfix_expression '.' IDENTIFIER {unimplemented();}
+	| postfix_expression PTR_OP IDENTIFIER {unimplemented();}
+	| postfix_expression INC_OP {unimplemented();}
+	| postfix_expression DEC_OP {unimplemented();}
+	| '(' type_name ')' '{' initializer_list '}' {unimplemented();}
+	| '(' type_name ')' '{' initializer_list ',' '}' {unimplemented();}
 	;
 
 argument_expression_list
@@ -155,12 +162,12 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression {$$ = $1;}
-	| INC_OP unary_expression
-	| DEC_OP unary_expression
+	| INC_OP unary_expression {unimplemented();}
+	| DEC_OP unary_expression {unimplemented();}
 	| unary_operator cast_expression {$$ = new unary_op_expr($1, $2);}
-	| SIZEOF unary_expression
-	| SIZEOF '(' type_name ')'
-	| ALIGNOF '(' type_name ')'
+	| SIZEOF unary_expression {unimplemented();}
+	| SIZEOF '(' type_name ')' {unimplemented();}
+	| ALIGNOF '(' type_name ')' {unimplemented();}
 	;
 
 unary_operator
@@ -174,7 +181,7 @@ unary_operator
 
 cast_expression
 	: unary_expression {$$ = $1;}
-	| '(' type_name ')' cast_expression
+	| '(' type_name ')' cast_expression {unimplemented();}
 	;
 
 multiplicative_expression
@@ -265,13 +272,13 @@ expression
 	;
 
 constant_expression
-	: conditional_expression	/* with constraints */
+	: conditional_expression {unimplemented();}	/* with constraints */
 	;
 
 declaration
 	: declaration_specifiers ';' {$$ = new declaration_node($1);}
 	| declaration_specifiers init_declarator_list ';' {$$ = new declaration_node($1, $2);}
-	| static_assert_declaration
+	| static_assert_declaration {unimplemented();}
 	;
 
 declaration_specifiers
@@ -281,10 +288,10 @@ declaration_specifiers
 	| type_specifier {$$ = (new declaration_specs())->add($1);}
 	| type_qualifier declaration_specifiers {$$ = $2->add($1);}
 	| type_qualifier {$$ = (new declaration_specs)->add($1);}
-	| function_specifier declaration_specifiers
-	| function_specifier
-	| alignment_specifier declaration_specifiers
-	| alignment_specifier
+	| function_specifier declaration_specifiers {unimplemented();}
+	| function_specifier {unimplemented();}
+	| alignment_specifier declaration_specifiers {unimplemented();}
+	| alignment_specifier {unimplemented();}
 	;
 
 init_declarator_list
@@ -317,74 +324,74 @@ type_specifier
 	| SIGNED {$$ = type_specifiers::SIGNED;}
 	| UNSIGNED {$$ = type_specifiers::UNSIGNED;}
 	| BOOL {$$ = type_specifiers::BOOL;}
-	| COMPLEX
-	| IMAGINARY	  	/* non-mandated extension */
-	| atomic_type_specifier
-	| struct_or_union_specifier
-	| enum_specifier
-	| TYPEDEF_NAME		/* after it has been defined as such */
+	| COMPLEX {unimplemented();}
+	| IMAGINARY	{unimplemented();}  	/* non-mandated extension */
+	| atomic_type_specifier {unimplemented();}
+	| struct_or_union_specifier {unimplemented();}
+	| enum_specifier {unimplemented();}
+	| TYPEDEF_NAME {unimplemented();}		/* after it has been defined as such */
 	;
 
 struct_or_union_specifier
 	: struct_or_union '{' struct_declaration_list '}'
 	| struct_or_union IDENTIFIER '{' struct_declaration_list '}'
-	| struct_or_union IDENTIFIER
+	| struct_or_union IDENTIFIER {unimplemented();}
 	;
 
 struct_or_union
-	: STRUCT
-	| UNION
+	: STRUCT {unimplemented();}
+	| UNION {unimplemented();}
 	;
 
 struct_declaration_list
-	: struct_declaration
-	| struct_declaration_list struct_declaration
+	: struct_declaration {unimplemented();}
+	| struct_declaration_list struct_declaration {unimplemented();}
 	;
 
 struct_declaration
-	: specifier_qualifier_list ';'	/* for anonymous struct/union */
-	| specifier_qualifier_list struct_declarator_list ';'
-	| static_assert_declaration
+	: specifier_qualifier_list ';'	/* for anonymous struct/union */ {unimplemented();}
+	| specifier_qualifier_list struct_declarator_list ';' {unimplemented();}
+	| static_assert_declaration {unimplemented();}
 	;
 
 specifier_qualifier_list
-	: type_specifier specifier_qualifier_list
-	| type_specifier
-	| type_qualifier specifier_qualifier_list
-	| type_qualifier
+	: type_specifier specifier_qualifier_list {unimplemented();}
+	| type_specifier {unimplemented();}
+	| type_qualifier specifier_qualifier_list {unimplemented();}
+	| type_qualifier {unimplemented();}
 	;
 
 struct_declarator_list
-	: struct_declarator
-	| struct_declarator_list ',' struct_declarator
+	: struct_declarator {unimplemented();}
+	| struct_declarator_list ',' struct_declarator {unimplemented();}
 	;
 
 struct_declarator
-	: ':' constant_expression
-	| declarator ':' constant_expression
-	| declarator
+	: ':' constant_expression {unimplemented();}
+	| declarator ':' constant_expression {unimplemented();}
+	| declarator {unimplemented();}
 	;
 
 enum_specifier
-	: ENUM '{' enumerator_list '}'
-	| ENUM '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER '{' enumerator_list '}'
-	| ENUM IDENTIFIER '{' enumerator_list ',' '}'
-	| ENUM IDENTIFIER
+	: ENUM '{' enumerator_list '}' {unimplemented();}
+	| ENUM '{' enumerator_list ',' '}' {unimplemented();}
+	| ENUM IDENTIFIER '{' enumerator_list '}' {unimplemented();}
+	| ENUM IDENTIFIER '{' enumerator_list ',' '}' {unimplemented();}
+	| ENUM IDENTIFIER {unimplemented();}
 	;
 
 enumerator_list
-	: enumerator
-	| enumerator_list ',' enumerator
+	: enumerator {unimplemented();}
+	| enumerator_list ',' enumerator {unimplemented();}
 	;
 
 enumerator	/* identifiers must be flagged as ENUMERATION_CONSTANT */
-	: enumeration_constant '=' constant_expression
-	| enumeration_constant
+	: enumeration_constant '=' constant_expression {unimplemented();}
+	| enumeration_constant {unimplemented();}
 	;
 
 atomic_type_specifier
-	: ATOMIC '(' type_name ')'
+	: ATOMIC '(' type_name ')' {unimplemented();}
 	;
 
 type_qualifier
@@ -395,13 +402,13 @@ type_qualifier
 	;
 
 function_specifier
-	: INLINE
-	| NORETURN
+	: INLINE {unimplemented();}
+	| NORETURN {unimplemented();}
 	;
 
 alignment_specifier
-	: ALIGNAS '(' type_name ')'
-	| ALIGNAS '(' constant_expression ')'
+	: ALIGNAS '(' type_name ')' {unimplemented();}
+	| ALIGNAS '(' constant_expression ')' {unimplemented();}
 	;
 
 declarator
@@ -451,48 +458,48 @@ parameter_list
 
 parameter_declaration
 	: declaration_specifiers declarator {$$ = new param_declaration($1, $2);}
-	| declaration_specifiers abstract_declarator
+	| declaration_specifiers abstract_declarator {unimplemented();}
 	| declaration_specifiers {$$ = new param_declaration($1);}
 	;
 
 identifier_list
-	: IDENTIFIER
-	| identifier_list ',' IDENTIFIER
+	: IDENTIFIER {unimplemented();}
+	| identifier_list ',' IDENTIFIER {unimplemented();}
 	;
 
 type_name
-	: specifier_qualifier_list abstract_declarator
-	| specifier_qualifier_list
+	: specifier_qualifier_list abstract_declarator {unimplemented();}
+	| specifier_qualifier_list {unimplemented();}
 	;
 
 abstract_declarator
-	: pointer direct_abstract_declarator
-	| pointer
-	| direct_abstract_declarator
+	: pointer direct_abstract_declarator {unimplemented();}
+	| pointer {unimplemented();}
+	| direct_abstract_declarator {unimplemented();}
 	;
 
 direct_abstract_declarator
-	: '(' abstract_declarator ')'
-	| '[' ']'
-	| '[' '*' ']'
-	| '[' STATIC type_qualifier_list assignment_expression ']'
-	| '[' STATIC assignment_expression ']'
-	| '[' type_qualifier_list STATIC assignment_expression ']'
-	| '[' type_qualifier_list assignment_expression ']'
-	| '[' type_qualifier_list ']'
-	| '[' assignment_expression ']'
-	| direct_abstract_declarator '[' ']'
-	| direct_abstract_declarator '[' '*' ']'
-	| direct_abstract_declarator '[' STATIC type_qualifier_list assignment_expression ']'
-	| direct_abstract_declarator '[' STATIC assignment_expression ']'
-	| direct_abstract_declarator '[' type_qualifier_list assignment_expression ']'
-	| direct_abstract_declarator '[' type_qualifier_list STATIC assignment_expression ']'
-	| direct_abstract_declarator '[' type_qualifier_list ']'
-	| direct_abstract_declarator '[' assignment_expression ']'
-	| '(' ')'
-	| '(' parameter_type_list ')'
-	| direct_abstract_declarator '(' ')'
-	| direct_abstract_declarator '(' parameter_type_list ')'
+	: '(' abstract_declarator ')' {unimplemented();}
+	| '[' ']' {unimplemented();}
+	| '[' '*' ']' {unimplemented();}
+	| '[' STATIC type_qualifier_list assignment_expression ']' {unimplemented();}
+	| '[' STATIC assignment_expression ']' {unimplemented();}
+	| '[' type_qualifier_list STATIC assignment_expression ']' {unimplemented();}
+	| '[' type_qualifier_list assignment_expression ']' {unimplemented();}
+	| '[' type_qualifier_list ']' {unimplemented();}
+	| '[' assignment_expression ']' {unimplemented();}
+	| direct_abstract_declarator '[' ']' {unimplemented();}
+	| direct_abstract_declarator '[' '*' ']' {unimplemented();}
+	| direct_abstract_declarator '[' STATIC type_qualifier_list assignment_expression ']' {unimplemented();}
+	| direct_abstract_declarator '[' STATIC assignment_expression ']' {unimplemented();}
+	| direct_abstract_declarator '[' type_qualifier_list assignment_expression ']' {unimplemented();}
+	| direct_abstract_declarator '[' type_qualifier_list STATIC assignment_expression ']' {unimplemented();}
+	| direct_abstract_declarator '[' type_qualifier_list ']' {unimplemented();}
+	| direct_abstract_declarator '[' assignment_expression ']' {unimplemented();}
+	| '(' ')' {unimplemented();}
+	| '(' parameter_type_list ')' {unimplemented();}
+	| direct_abstract_declarator '(' ')' {unimplemented();}
+	| direct_abstract_declarator '(' parameter_type_list ')' {unimplemented();}
 	;
 
 initializer
@@ -502,28 +509,28 @@ initializer
 	;
 
 initializer_list
-	: designation initializer
+	: designation initializer {unimplemented();}
 	| initializer {$$ = (new initializer_lst())->add($1);}
-	| initializer_list ',' designation initializer
+	| initializer_list ',' designation initializer {unimplemented();}
 	| initializer_list ',' initializer {$$ = $1->add($3);}
 	;
 
 designation
-	: designator_list '='
+	: designator_list '=' {unimplemented();}
 	;
 
 designator_list
-	: designator
-	| designator_list designator
+	: designator {unimplemented();}
+	| designator_list designator {unimplemented();}
 	;
 
 designator
-	: '[' constant_expression ']'
-	| '.' IDENTIFIER
+	: '[' constant_expression ']' {unimplemented();}
+	| '.' IDENTIFIER {unimplemented();}
 	;
 
 static_assert_declaration
-	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';'
+	: STATIC_ASSERT '(' constant_expression ',' STRING_LITERAL ')' ';' {unimplemented();}
 	;
 
 statement
@@ -537,8 +544,8 @@ statement
 
 labeled_statement
 	: IDENTIFIER ':' statement {$$ = new prefix_labeled_stmt($1, $3);}
-	| CASE constant_expression ':' statement
-	| DEFAULT ':' statement
+	| CASE constant_expression ':' statement {unimplemented();}
+	| DEFAULT ':' statement {unimplemented();}
 	;
 
 compound_statement
@@ -564,22 +571,22 @@ expression_statement
 selection_statement
 	: IF '(' expression ')' statement ELSE statement {$$ = new if_stmt($3, $5, $7);}
 	| IF '(' expression ')' statement {$$ = new if_stmt($3, $5);}
-	| SWITCH '(' expression ')' statement
+	| SWITCH '(' expression ')' statement {unimplemented();}
 	;
 
 iteration_statement
 	: WHILE '(' expression ')' statement {$$ = new while_stmt($3, $5);}
-	| DO statement WHILE '(' expression ')' ';'
-	| FOR '(' expression_statement expression_statement ')' statement
-	| FOR '(' expression_statement expression_statement expression ')' statement
-	| FOR '(' declaration expression_statement ')' statement
-	| FOR '(' declaration expression_statement expression ')' statement
+	| DO statement WHILE '(' expression ')' ';' {unimplemented();}
+	| FOR '(' expression_statement expression_statement ')' statement {unimplemented();}
+	| FOR '(' expression_statement expression_statement expression ')' statement {unimplemented();}
+	| FOR '(' declaration expression_statement ')' statement {unimplemented();}
+	| FOR '(' declaration expression_statement expression ')' statement {unimplemented();}
 	;
 
 jump_statement
 	: GOTO IDENTIFIER ';' {$$ = new goto_stmt($2);}
-	| CONTINUE ';'
-	| BREAK ';'
+	| CONTINUE ';' {unimplemented();}
+	| BREAK ';' {unimplemented();}
 	| RETURN ';' {$$ = new return_stmt();}
 	| RETURN expression ';' {$$ = new return_stmt($2);}
 	;
@@ -600,8 +607,8 @@ function_definition
 	;
 
 declaration_list
-	: declaration
-	| declaration_list declaration
+	: declaration {unimplemented();}
+	| declaration_list declaration {unimplemented();}
 	;
 
 %%

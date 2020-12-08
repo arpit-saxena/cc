@@ -19,4 +19,4 @@ Stuff to do before submission
     - [x] If const condition in if_stmt, don't generate new blocks
 - [ ] Invariant checking
   - [ ] all codegen functions result in a non-terminated block in ir_builder
-- [ ] Add Tests through CMake's testing facility
+- [x] Add Tests through CMake's testing facility

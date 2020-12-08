@@ -8,10 +8,13 @@ prefix_labeled_stmt::prefix_labeled_stmt(const char *ident, stmt_node *stmt) {
   statement = stmt;
 }
 
-void prefix_labeled_stmt::codegen() {
-  llvm::BasicBlock *block = llvm::BasicBlock::Create(the_context, identifier,
-                                                     sym_table.get_curr_func());
-  sym_table.top_func_scope()->add_label(identifier, block);
+void prefix_labeled_stmt::codegen() { codegen(identifier, statement); }
+
+llvm::BasicBlock *prefix_labeled_stmt::codegen(std::string name,
+                                               stmt_node *statement) {
+  llvm::BasicBlock *block =
+      llvm::BasicBlock::Create(the_context, name, sym_table.get_curr_func());
+  sym_table.top_func_scope()->add_label(name, block);
 
   llvm::BasicBlock *insert_block = ir_builder.GetInsertBlock();
   if (insert_block->empty()) {
@@ -23,6 +26,8 @@ void prefix_labeled_stmt::codegen() {
 
   ir_builder.SetInsertPoint(block);
   statement->codegen();
+
+  return block;
 }
 
 void prefix_labeled_stmt::dump_tree() {

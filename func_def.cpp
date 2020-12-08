@@ -39,12 +39,12 @@ void func_def::codegen() {
     if (insert_block->empty() && insert_block->use_empty()) {
       // Empty basic block with no uses. Remove it
       insert_block->eraseFromParent();
-    } else {
-      if (!decl_specs->get_type().llvm_type->isVoidTy()) {
-        print_warning(
-            "No return statement in function with non-void return type");
-      }
+    } else if (!decl_specs->get_type().llvm_type->isVoidTy()) {
+      print_warning(
+          "No return statement in function with non-void return type");
       ir_builder.CreateRet(llvm::UndefValue::get(func->getReturnType()));
+    } else {  // Void type
+      ir_builder.CreateRetVoid();
     }
   }
 

@@ -18,8 +18,6 @@ SET(CMAKE_CXX_FLAGS  "-std=c++17 -g ${CMAKE_CXX_FLAGS}")
 include_directories(${LLVM_INCLUDE_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
-SET(CMAKE_MODULE_PATH "cmake_includes ${CMAKE_MODULE_PATH}")
-
 set(POPT_DIR "${CMAKE_SOURCE_DIR}/cmake_modules")
 
 FIND_LIBRARY(POPT_LIBRARY NAMES popt)
@@ -35,6 +33,10 @@ llvm_map_components_to_libnames(llvm_libs core)
 
 # Link against LLVM libraries
 target_link_libraries(cc ${llvm_libs} ${POPT_LIBRARY})
+
+add_custom_target(build_tests)
+add_custom_target(run_tests COMMAND ${CMAKE_CTEST_COMMAND})
+add_dependencies(run_tests build_tests)
 
 enable_testing()
 

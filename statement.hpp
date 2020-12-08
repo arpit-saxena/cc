@@ -27,7 +27,8 @@ class prefix_labeled_stmt : public labeled_stmt {
   prefix_labeled_stmt(const char *ident, stmt_node *stmt);
   void dump_tree() override;
   void codegen() override;
-  static llvm::BasicBlock *codegen(std::string name, stmt_node *statement);
+  static llvm::BasicBlock *codegen(std::string name, stmt_node *statement,
+                                   bool add_to_table = true);
 };
 
 class compound_stmt : public stmt_node {

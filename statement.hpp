@@ -31,6 +31,50 @@ class prefix_labeled_stmt : public labeled_stmt {
                                    bool add_to_table = true);
 };
 
+class switch_labeled_stmt : public labeled_stmt {
+ protected:
+  struct scope {
+    llvm::SwitchInst *switch_inst;
+    llvm::BasicBlock *default_block = nullptr;
+
+    scope(llvm::SwitchInst *s) : switch_inst(s){};
+  };
+
+  static std::vector<scope> switch_scopes;
+  static scope &top_scope() { return switch_scopes.back(); };
+  static void push_scope(llvm::SwitchInst *switch_inst) {
+    switch_scopes.emplace_back(switch_inst);
+  };
+  static void pop_scope() { switch_scopes.pop_back(); };
+
+ public:
+  class auto_scope {
+   public:
+    auto_scope(llvm::SwitchInst *switch_inst) { push_scope(switch_inst); };
+    ~auto_scope() { pop_scope(); };
+    llvm::BasicBlock *get_default_block() { return top_scope().default_block; }
+  };
+};
+
+class case_labeled_stmt : public switch_labeled_stmt {
+  cond_expr *expression;  // Using as a proxy for constant_expression class
+  stmt_node *statement;
+
+ public:
+  case_labeled_stmt(cond_expr *expression, stmt_node *statement);
+  void dump_tree() override;
+  void codegen() override;
+};
+
+class default_labeled_stmt : public switch_labeled_stmt {
+  stmt_node *statement;
+
+ public:
+  default_labeled_stmt(stmt_node *statement);
+  void dump_tree() override;
+  void codegen() override;
+};
+
 class compound_stmt : public stmt_node {
   std::vector<blk_item *> block_items;
 
@@ -58,6 +102,16 @@ class if_stmt : public selection_stmt {
 
  public:
   if_stmt(expr *cond, stmt_node *then_stmt, stmt_node *else_stmt = nullptr);
+  void dump_tree() override;
+  void codegen() override;
+};
+
+class switch_stmt : public selection_stmt {
+  expr *expression;
+  stmt_node *statement;
+
+ public:
+  switch_stmt(expr *expression, stmt_node *statement);
   void dump_tree() override;
   void codegen() override;
 };

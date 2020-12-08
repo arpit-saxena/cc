@@ -95,7 +95,7 @@ void unimplemented [[noreturn]] () {
 %nterm <assign_expr *> assignment_expression
 %nterm <assign_expr_ops::OP> assignment_operator
 %nterm <expr *> expression
-
+%nterm <cond_expr *> constant_expression // TODO: Replace with own class
 %nterm <initializer_node *> initializer
 %nterm <initializer_lst *> initializer_list
 %nterm <init_decl *> init_declarator
@@ -272,7 +272,7 @@ expression
 	;
 
 constant_expression
-	: conditional_expression {unimplemented();}	/* with constraints */
+	: conditional_expression {$$ = $1;}	/* with constraints */
 	;
 
 declaration
@@ -544,8 +544,8 @@ statement
 
 labeled_statement
 	: IDENTIFIER ':' statement {$$ = new prefix_labeled_stmt($1, $3);}
-	| CASE constant_expression ':' statement {unimplemented();}
-	| DEFAULT ':' statement {unimplemented();}
+	| CASE constant_expression ':' statement {$$ = new case_labeled_stmt($2, $4);}
+	| DEFAULT ':' statement {$$ = new default_labeled_stmt($3);}
 	;
 
 compound_statement
@@ -571,7 +571,7 @@ expression_statement
 selection_statement
 	: IF '(' expression ')' statement ELSE statement {$$ = new if_stmt($3, $5, $7);}
 	| IF '(' expression ')' statement {$$ = new if_stmt($3, $5);}
-	| SWITCH '(' expression ')' statement {unimplemented();}
+	| SWITCH '(' expression ')' statement {$$ = new switch_stmt($3, $5);}
 	;
 
 iteration_statement

@@ -42,6 +42,60 @@ void prefix_labeled_stmt::dump_tree() {
   cout.unindent();
 }
 
+std::vector<switch_labeled_stmt::scope> switch_labeled_stmt::switch_scopes;
+
+case_labeled_stmt::case_labeled_stmt(cond_expr *expression,
+                                     stmt_node *statement) {
+  this->expression = expression;
+  this->statement = statement;
+}
+
+void case_labeled_stmt::dump_tree() {
+  cout << "- (labeled_statement) case" << endl;
+  cout.indent();
+  expression->dump_tree();
+  statement->dump_tree();
+  cout.unindent();
+}
+
+void case_labeled_stmt::codegen() {
+  value val = expression->codegen();
+  auto const_val = llvm::dyn_cast<llvm::ConstantInt>(val.llvm_val);
+
+  if (!const_val) {
+    raise_error("case statement must contain an integer constant expression");
+  }
+
+  std::string block_name = "case_";
+  block_name += const_val->getValue().toString(/* radix */ 10, val.is_signed);
+
+  auto block = prefix_labeled_stmt::codegen(block_name, statement,
+                                            /*add_to_table */ false);
+
+  top_scope().switch_inst->addCase(const_val, block);
+}
+
+default_labeled_stmt::default_labeled_stmt(stmt_node *statement) {
+  this->statement = statement;
+}
+
+void default_labeled_stmt::dump_tree() {
+  cout << "- (default)" << endl;
+  cout.indent();
+  statement->dump_tree();
+  cout.unindent();
+}
+
+void default_labeled_stmt::codegen() {
+  if (top_scope().default_block) {
+    // Some default statement is already present
+    raise_error("Multiple default cases are not allowed in a switch statement");
+  }
+
+  top_scope().default_block = prefix_labeled_stmt::codegen(
+      "default", statement, /* add_to_table */ false);
+}
+
 compound_stmt *compound_stmt::add(blk_item *item) {
   block_items.push_back(item);
   return this;
@@ -156,6 +210,49 @@ void if_stmt::codegen() {
   }
 
   ir_builder.SetInsertPoint(end_block);
+}
+
+switch_stmt::switch_stmt(expr *expression, stmt_node *statement) {
+  this->expression = expression;
+  this->statement = statement;
+}
+
+void switch_stmt::dump_tree() {
+  cout << "- (switch_statement)" << endl;
+  cout.indent();
+  expression->dump_tree();
+  statement->dump_tree();
+  cout.unindent();
+}
+
+void switch_stmt::codegen() {
+  auto sym_scope = sym_table.top_func_scope()->new_scope();
+
+  value control_var = expression->codegen();
+
+  auto end_block = llvm::BasicBlock::Create(the_context, "switch_end");
+  auto switch_inst = ir_builder.CreateSwitch(control_var.llvm_val, end_block);
+
+  // This is mainly to satisfy the invariant of always having a non terminated
+  // block being used the IRBuilder
+  auto new_block = llvm::BasicBlock::Create(the_context, "switch_new",
+                                            sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(new_block);
+
+  auto switch_scope = switch_labeled_stmt::auto_scope(switch_inst);
+
+  {  // New symbol scope
+    auto sym_scope = sym_table.top_func_scope()->new_scope();
+    statement->codegen();
+  }
+
+  if (auto default_block = switch_scope.get_default_block()) {
+    switch_inst->setDefaultDest(default_block);
+  } else {
+    ir_builder.CreateBr(end_block);
+    end_block->insertInto(sym_table.get_curr_func());
+    ir_builder.SetInsertPoint(end_block);
+  }
 }
 
 while_stmt::while_stmt(expr *condition, stmt_node *statement)

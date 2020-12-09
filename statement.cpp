@@ -271,17 +271,30 @@ void while_stmt::codegen() {
 
   llvm::BasicBlock *cond_block = llvm::BasicBlock::Create(
       the_context, "while_cond", sym_table.get_curr_func());
+
+  auto br_to_cond = ir_builder.CreateBr(cond_block);
+
+  ir_builder.SetInsertPoint(cond_block);
+  value cond_val = condition->codegen();
+
+  if (auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
+    if (const_cond->isZeroValue()) {
+      // No need to generate any codegen. Remove the cond_block too
+      br_to_cond->eraseFromParent();
+      ir_builder.SetInsertPoint(cond_block->getPrevNode());
+      cond_block->eraseFromParent();
+      return;
+    }
+  }
+
+  llvm::Value *binary_cond = ir_builder.CreateICmpNE(
+      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
+
   llvm::BasicBlock *body_block = llvm::BasicBlock::Create(
       the_context, "while_body", sym_table.get_curr_func());
   llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
       the_context, "while_end", sym_table.get_curr_func());
 
-  ir_builder.CreateBr(cond_block);
-
-  ir_builder.SetInsertPoint(cond_block);
-  value cond_val = condition->codegen();
-  llvm::Value *binary_cond = ir_builder.CreateICmpNE(
-      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
   ir_builder.CreateCondBr(binary_cond, body_block, end_block);
 
   {  // New scope

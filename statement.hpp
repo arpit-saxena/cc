@@ -128,6 +128,17 @@ class while_stmt : public iteration_stmt {
   void codegen() override;
 };
 
+// TODO: Reduce code duplication with while by making a common base
+class do_stmt : public iteration_stmt {
+  stmt_node *statement;
+  expr *condition;
+
+ public:
+  do_stmt(stmt_node *statement, expr *condition);
+  void dump_tree() override;
+  void codegen() override;
+};
+
 class jump_stmt : public stmt_node {};
 
 class goto_stmt : public jump_stmt {

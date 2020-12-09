@@ -295,6 +295,47 @@ void while_stmt::codegen() {
   ir_builder.SetInsertPoint(end_block);
 }
 
+do_stmt::do_stmt(stmt_node *statement, expr *condition) {
+  this->statement = statement;
+  this->condition = condition;
+}
+
+void do_stmt::dump_tree() {
+  cout << "- (do_statement)" << endl;
+  cout.indent();
+  statement->dump_tree();
+  condition->dump_tree();
+  cout.unindent();
+}
+
+void do_stmt::codegen() {
+  auto s = sym_table.top_func_scope()->new_scope();
+
+  llvm::BasicBlock *body_block = llvm::BasicBlock::Create(
+      the_context, "do_body", sym_table.get_curr_func());
+  llvm::BasicBlock *cond_block = llvm::BasicBlock::Create(
+      the_context, "do_cond", sym_table.get_curr_func());
+  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
+      the_context, "do_end", sym_table.get_curr_func());
+
+  {  // new symbol scope
+    auto s = sym_table.top_func_scope()->new_scope();
+    ir_builder.CreateBr(body_block);
+    ir_builder.SetInsertPoint(body_block);
+    statement->codegen();
+  }
+
+  ir_builder.CreateBr(cond_block);
+  ir_builder.SetInsertPoint(cond_block);
+
+  value cond_val = condition->codegen();
+  llvm::Value *binary_cond = ir_builder.CreateICmpNE(
+      cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
+  ir_builder.CreateCondBr(binary_cond, body_block, end_block);
+
+  ir_builder.SetInsertPoint(end_block);
+}
+
 goto_stmt::goto_stmt(const char *ident) {
   identifier = std::string(ident);
   free((void *)ident);

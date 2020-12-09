@@ -576,7 +576,7 @@ selection_statement
 
 iteration_statement
 	: WHILE '(' expression ')' statement {$$ = new while_stmt($3, $5);}
-	| DO statement WHILE '(' expression ')' ';' {unimplemented();}
+	| DO statement WHILE '(' expression ')' ';' {$$ = new do_stmt($2, $5);}
 	| FOR '(' expression_statement expression_statement ')' statement {unimplemented();}
 	| FOR '(' expression_statement expression_statement expression ')' statement {unimplemented();}
 	| FOR '(' declaration expression_statement ')' statement {unimplemented();}

@@ -35,17 +35,18 @@ void func_def::codegen() {
   statement->codegen();
 
   llvm::BasicBlock *insert_block = ir_builder.GetInsertBlock();
-  if (!insert_block->getTerminator()) {
-    if (insert_block->empty() && insert_block->use_empty()) {
-      // Empty basic block with no uses. Remove it
-      insert_block->eraseFromParent();
-    } else if (!decl_specs->get_type().llvm_type->isVoidTy()) {
-      print_warning(
-          "No return statement in function with non-void return type");
-      ir_builder.CreateRet(llvm::UndefValue::get(func->getReturnType()));
-    } else {  // Void type
-      ir_builder.CreateRetVoid();
-    }
+
+  // insert_block is not terminated due to our invariant
+  assert(!insert_block->getTerminator() && "Block should not be terminated");
+
+  if (insert_block->empty() && insert_block->use_empty()) {
+    // Empty basic block with no uses. Remove it
+    insert_block->eraseFromParent();
+  } else if (!decl_specs->get_type().llvm_type->isVoidTy()) {
+    print_warning("No return statement in function with non-void return type");
+    ir_builder.CreateRet(llvm::UndefValue::get(func->getReturnType()));
+  } else {  // Void type
+    ir_builder.CreateRetVoid();
   }
 
   // The function scope would've been added by codegen_def of func_decl

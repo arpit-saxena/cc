@@ -595,6 +595,50 @@ std::vector<value> arg_expr_list::codegen() {
   return vals;
 }
 
+postfix_inc_dec_expr::postfix_inc_dec_expr(postfix_expr *expr,
+                                           postfix_inc_dec_expr::OP op) {
+  this->expression = expr;
+  this->op = op;
+}
+
+void postfix_inc_dec_expr::dump_tree() {
+  cout << "- (postfix_expression)" << endl;
+  cout.indent();
+  expression->dump_tree();
+  cout << "- (postfix_operator) " << to_string(op);
+  cout.unindent();
+}
+
+std::string postfix_inc_dec_expr::to_string(postfix_inc_dec_expr::OP op) {
+  switch (op) {
+    case INC:
+      return "++";
+    case DEC:
+      return "--";
+  }
+  raise_error("Unknown posfix_inc_dec_expr type");
+}
+
+value postfix_inc_dec_expr::codegen() {
+  value val = expression->codegen();
+
+  binary_expr_ops::OP bin_op;
+  switch (op) {
+    case INC:
+      bin_op = binary_expr_ops::PLUS;
+      break;
+    case DEC:
+      bin_op = binary_expr_ops::MINUS;
+      break;
+  }
+
+  value to_store = binary_expr_ops::codegen(
+      val, bin_op, const_expr::get_val(1, val.get_type()));
+  expression->codegen_store(to_store);
+
+  return val;
+}
+
 func_call::func_call(postfix_expr *func_expr, arg_expr_list *expr_list) {
   this->func_expr = func_expr;
   this->arg_list = expr_list;

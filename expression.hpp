@@ -186,6 +186,21 @@ class arg_expr_list : public ast_node {
 
 class postfix_expr : public unary_expr {};
 
+class postfix_inc_dec_expr : public postfix_expr {
+ public:
+  enum OP { INC, DEC };
+
+ private:
+  postfix_expr *expression;
+  OP op;
+
+ public:
+  postfix_inc_dec_expr(postfix_expr *expr, OP op);
+  void dump_tree() override;
+  static std::string to_string(OP op);
+  value codegen() override;
+};
+
 class func_call : public postfix_expr {
   postfix_expr *func_expr;
   arg_expr_list *arg_list;  // Optional

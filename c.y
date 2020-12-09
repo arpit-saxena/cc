@@ -149,8 +149,8 @@ postfix_expression
 	| postfix_expression '(' argument_expression_list ')' {$$ = new func_call($1, $3);}
 	| postfix_expression '.' IDENTIFIER {unimplemented();}
 	| postfix_expression PTR_OP IDENTIFIER {unimplemented();}
-	| postfix_expression INC_OP {unimplemented();}
-	| postfix_expression DEC_OP {unimplemented();}
+	| postfix_expression INC_OP {$$ = new postfix_inc_dec_expr($1, postfix_inc_dec_expr::INC);}
+	| postfix_expression DEC_OP {$$ = new postfix_inc_dec_expr($1, postfix_inc_dec_expr::DEC);}
 	| '(' type_name ')' '{' initializer_list '}' {unimplemented();}
 	| '(' type_name ')' '{' initializer_list ',' '}' {unimplemented();}
 	;

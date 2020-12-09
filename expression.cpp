@@ -565,6 +565,50 @@ type_i unary_op_expr::get_type() {
   raise_error("Address-of and indirection operators are not supported!");
 }
 
+unary_inc_dec_expr::unary_inc_dec_expr(unary_inc_dec_expr::OP op,
+                                       unary_expr *expression) {
+  this->op = op;
+  this->expression = expression;
+}
+
+std::string unary_inc_dec_expr::op_string(unary_inc_dec_expr::OP op) {
+  switch (op) {
+    case INC:
+      return "++";
+    case DEC:
+      return "--";
+  }
+  raise_error("Unkown unary_inc_dec_expr operator");
+}
+
+void unary_inc_dec_expr::dump_tree() {
+  cout << "- (unary_expression)" << endl;
+  cout.indent();
+  cout << "- (unary_operator) " << op_string(op) << endl;
+  expression->codegen();
+  cout.unindent();
+}
+
+value unary_inc_dec_expr::codegen() {
+  value val = expression->codegen();
+
+  binary_expr_ops::OP bin_op;
+  switch (op) {
+    case INC:
+      bin_op = binary_expr_ops::PLUS;
+      break;
+    case DEC:
+      bin_op = binary_expr_ops::MINUS;
+      break;
+  }
+
+  value to_store = binary_expr_ops::codegen(
+      val, bin_op, const_expr::get_val(1, val.get_type()));
+  expression->codegen_store(to_store);
+
+  return to_store;
+}
+
 arg_expr_list *arg_expr_list::add(assign_expr *expr) {
   exprs.push_back(expr);
   return this;

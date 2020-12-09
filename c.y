@@ -162,8 +162,8 @@ argument_expression_list
 
 unary_expression
 	: postfix_expression {$$ = $1;}
-	| INC_OP unary_expression {unimplemented();}
-	| DEC_OP unary_expression {unimplemented();}
+	| INC_OP unary_expression {$$ = new unary_inc_dec_expr(unary_inc_dec_expr::INC, $2);}
+	| DEC_OP unary_expression {$$ = new unary_inc_dec_expr(unary_inc_dec_expr::DEC, $2);}
 	| unary_operator cast_expression {$$ = new unary_op_expr($1, $2);}
 	| SIZEOF unary_expression {unimplemented();}
 	| SIZEOF '(' type_name ')' {unimplemented();}

@@ -174,6 +174,21 @@ class unary_op_expr : public unary_expr {
   type_i get_type() override;
 };
 
+class unary_inc_dec_expr : public unary_expr {
+ public:
+  enum OP { INC, DEC };
+
+ private:
+  OP op;
+  unary_expr *expression;
+
+ public:
+  unary_inc_dec_expr(OP op, unary_expr *expression);
+  static std::string op_string(OP op);
+  void dump_tree() override;
+  value codegen() override;
+};
+
 class arg_expr_list : public ast_node {
   std::vector<assign_expr *> exprs;
 

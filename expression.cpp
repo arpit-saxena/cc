@@ -186,6 +186,8 @@ value assign_expr_ops::codegen() {
   return left_expr->codegen_store(right_val);
 }
 
+type_i assign_expr_ops::get_type() { return left_expr->get_type(); }
+
 cond_expr_ops::cond_expr_ops(binary_expr *cond, expr *true_expr,
                              cond_expr *false_expr) {
   this->cond = cond;
@@ -609,6 +611,8 @@ value unary_inc_dec_expr::codegen() {
   return to_store;
 }
 
+type_i unary_inc_dec_expr::get_type() { return expression->get_type(); }
+
 arg_expr_list *arg_expr_list::add(assign_expr *expr) {
   exprs.push_back(expr);
   return this;
@@ -682,6 +686,8 @@ value postfix_inc_dec_expr::codegen() {
 
   return val;
 }
+
+type_i postfix_inc_dec_expr::get_type() { return expression->get_type(); }
 
 func_call::func_call(postfix_expr *func_expr, arg_expr_list *expr_list) {
   this->func_expr = func_expr;
@@ -990,4 +996,9 @@ void string_expr::unescape_escape_seqs() {
   }
 
   str = ss.str();
+}
+
+type_i string_expr::get_type() {
+  type_i char_type = type_specifiers(type_specifiers::CHAR).get_type();
+  return pointer_node().get_type(char_type);
 }

@@ -10,9 +10,7 @@
 class stmt_node : public blk_item {
  public:
   virtual void dump_tree() override;
-  virtual void codegen() override {
-    raise_error("codegen not implemented for this expression");
-  }  // TODO: Make pure virtual
+  virtual void codegen() override = 0;
 };
 
 class labeled_stmt : public stmt_node {};

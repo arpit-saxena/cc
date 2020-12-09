@@ -22,12 +22,8 @@
 
 class expr : public ast_node {
  public:
-  virtual value codegen() {
-    raise_error("codegen not implemented for this expression!");
-  };  // TODO: Make this pure virtual
-  virtual type_i get_type() {
-    raise_error("get_type not implemented for this expression!");
-  }  // TODO: Make this pure virtual
+  virtual value codegen() = 0;
+  virtual type_i get_type() = 0;
   static void convert_to_bool(llvm::Value *&val);
   static void convert_to_type(value &val, type_i type);
   static void gen_common_type(value &lhs, value &rhs);
@@ -76,6 +72,7 @@ class assign_expr_ops : public assign_expr {
   static std::string op_string(OP op);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 class binary_expr;  // forward declaration
@@ -187,6 +184,7 @@ class unary_inc_dec_expr : public unary_expr {
   static std::string op_string(OP op);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 class arg_expr_list : public ast_node {
@@ -214,6 +212,7 @@ class postfix_inc_dec_expr : public postfix_expr {
   void dump_tree() override;
   static std::string to_string(OP op);
   value codegen() override;
+  type_i get_type() override;
 };
 
 class func_call : public postfix_expr {
@@ -278,6 +277,7 @@ class string_expr : public primary_expr {
   string_expr(const char *str);
   void dump_tree() override;
   value codegen() override;
+  type_i get_type() override;
 };
 
 #endif /* EXPRESSION_HPP */

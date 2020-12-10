@@ -72,6 +72,7 @@ class declaration_node : public blk_item, public external_decl {
                    init_decl_list *decl_list = nullptr);
   void dump_tree() override;
   virtual void codegen() override;
+  bool has_labeled_stmt() override { return false; }
 };
 
 #endif /* DECLARATION_HPP */

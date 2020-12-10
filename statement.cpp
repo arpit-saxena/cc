@@ -160,7 +160,14 @@ void if_stmt::codegen() {
 
   value cond_val = condition->codegen();
 
-  if (auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
+  // NOTE: We also have to check if the statement has any labeled statements
+  // since there could be a goto to those labels, so we generate the entire
+  // statement if any label is found.
+  // This could be improved with further analysis and bookkeeping
+
+  auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val);
+  if (const_cond && !then_stmt->has_labeled_stmt() &&
+      (!else_stmt || !else_stmt->has_labeled_stmt())) {
     if (const_cond->isZeroValue()) {
       if (!else_stmt) return;
 
@@ -287,7 +294,13 @@ void while_stmt::codegen() {
   ir_builder.SetInsertPoint(cond_block);
   value cond_val = condition->codegen();
 
-  if (auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
+  // NOTE: We also have to check if the statement has any labeled statements
+  // since there could be a goto to those labels, so we generate the entire
+  // statement if any label is found.
+  // This could be improved with further analysis and bookkeeping
+
+  auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val);
+  if (const_cond && !statement->has_labeled_stmt()) {
     if (const_cond->isZeroValue()) {
       // No need to generate any codegen. Remove the cond_block too
       br_to_cond->eraseFromParent();

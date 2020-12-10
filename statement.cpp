@@ -177,12 +177,10 @@ void if_stmt::codegen() {
   llvm::BasicBlock *then_block =
       llvm::BasicBlock::Create(the_context, "then", sym_table.get_curr_func());
   llvm::BasicBlock *else_block;
-  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
-      the_context, "if_end", sym_table.get_curr_func());
+  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(the_context, "if_end");
 
   if (else_stmt) {
-    else_block = llvm::BasicBlock::Create(the_context, "else",
-                                          sym_table.get_curr_func());
+    else_block = llvm::BasicBlock::Create(the_context, "else");
   } else {
     else_block = end_block;
   }
@@ -199,6 +197,10 @@ void if_stmt::codegen() {
     }
   }
 
+  // If else_stmt is null, then we inserted the end_block. If else_stmt is not
+  // null, then insert the actual end_stmt at the end of the if
+  else_block->insertInto(sym_table.get_curr_func());
+
   if (else_stmt) {
     auto s = sym_table.top_func_scope()->new_scope();
 
@@ -207,6 +209,8 @@ void if_stmt::codegen() {
     if (!ir_builder.GetInsertBlock()->getTerminator()) {
       ir_builder.CreateBr(end_block);
     }
+
+    end_block->insertInto(sym_table.get_curr_func());
   }
 
   ir_builder.SetInsertPoint(end_block);
@@ -296,8 +300,8 @@ void while_stmt::codegen() {
 
   llvm::BasicBlock *body_block = llvm::BasicBlock::Create(
       the_context, "while_body", sym_table.get_curr_func());
-  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
-      the_context, "while_end", sym_table.get_curr_func());
+  llvm::BasicBlock *end_block =
+      llvm::BasicBlock::Create(the_context, "while_end");
 
   ir_builder.CreateCondBr(binary_cond, body_block, end_block);
 
@@ -312,6 +316,7 @@ void while_stmt::codegen() {
     ir_builder.CreateBr(cond_block);
   }
 
+  end_block->insertInto(sym_table.get_curr_func());
   ir_builder.SetInsertPoint(end_block);
 }
 
@@ -333,10 +338,9 @@ void do_stmt::codegen() {
 
   llvm::BasicBlock *body_block = llvm::BasicBlock::Create(
       the_context, "do_body", sym_table.get_curr_func());
-  llvm::BasicBlock *cond_block = llvm::BasicBlock::Create(
-      the_context, "do_cond", sym_table.get_curr_func());
-  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(
-      the_context, "do_end", sym_table.get_curr_func());
+  llvm::BasicBlock *cond_block =
+      llvm::BasicBlock::Create(the_context, "do_cond");
+  llvm::BasicBlock *end_block = llvm::BasicBlock::Create(the_context, "do_end");
 
   {  // new symbol scope
     auto s = sym_table.top_func_scope()->new_scope();
@@ -349,6 +353,7 @@ void do_stmt::codegen() {
   }
 
   ir_builder.CreateBr(cond_block);
+  cond_block->insertInto(sym_table.get_curr_func());
   ir_builder.SetInsertPoint(cond_block);
 
   value cond_val = condition->codegen();
@@ -356,6 +361,7 @@ void do_stmt::codegen() {
       cond_val.llvm_val, const_expr::get_val(0, cond_val.get_type()).llvm_val);
   ir_builder.CreateCondBr(binary_cond, body_block, end_block);
 
+  end_block->insertInto(sym_table.get_curr_func());
   ir_builder.SetInsertPoint(end_block);
 }
 

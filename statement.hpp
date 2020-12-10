@@ -148,6 +148,34 @@ class goto_stmt : public jump_stmt {
   void codegen() override;
 };
 
+class continue_stmt : public jump_stmt {
+  static std::vector<llvm::BasicBlock *> dest_blocks;
+
+ public:
+  void dump_tree() override;
+  void codegen() override;
+
+  class scope {
+   public:
+    scope(llvm::BasicBlock *b) { dest_blocks.push_back(b); }
+    ~scope() { dest_blocks.pop_back(); }
+  };
+};
+
+class break_stmt : public jump_stmt {
+  static std::vector<llvm::BasicBlock *> dest_blocks;
+
+ public:
+  void dump_tree() override;
+  void codegen() override;
+
+  class scope {
+   public:
+    scope(llvm::BasicBlock *b) { dest_blocks.push_back(b); }
+    ~scope() { dest_blocks.pop_back(); }
+  };
+};
+
 class return_stmt : public jump_stmt {
   expr *expression;  // Optional
 

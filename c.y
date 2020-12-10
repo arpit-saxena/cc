@@ -585,8 +585,8 @@ iteration_statement
 
 jump_statement
 	: GOTO IDENTIFIER ';' {$$ = new goto_stmt($2);}
-	| CONTINUE ';' {unimplemented();}
-	| BREAK ';' {unimplemented();}
+	| CONTINUE ';' {$$ = new continue_stmt();}
+	| BREAK ';' {$$ = new break_stmt();}
 	| RETURN ';' {$$ = new return_stmt();}
 	| RETURN expression ';' {$$ = new return_stmt($2);}
 	;

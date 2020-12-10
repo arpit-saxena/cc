@@ -243,12 +243,16 @@ void switch_stmt::codegen() {
 
   {  // New symbol scope
     auto sym_scope = sym_table.top_func_scope()->new_scope();
+    break_stmt::scope break_scope(end_block);
     statement->codegen();
   }
 
   if (auto default_block = switch_scope.get_default_block()) {
     switch_inst->setDefaultDest(default_block);
-  } else {
+  }
+
+  // end_block might've been used by the break statement
+  if (end_block->getNumUses() > 0) {
     ir_builder.CreateBr(end_block);
     end_block->insertInto(sym_table.get_curr_func());
     ir_builder.SetInsertPoint(end_block);
@@ -300,6 +304,9 @@ void while_stmt::codegen() {
   {  // New scope
     auto s = sym_table.top_func_scope()->new_scope();
 
+    continue_stmt::scope cont_scope(cond_block);
+    break_stmt::scope break_scope(end_block);
+
     ir_builder.SetInsertPoint(body_block);
     statement->codegen();
     ir_builder.CreateBr(cond_block);
@@ -333,6 +340,9 @@ void do_stmt::codegen() {
 
   {  // new symbol scope
     auto s = sym_table.top_func_scope()->new_scope();
+    continue_stmt::scope cont_scope(cond_block);
+    break_stmt::scope break_scope(end_block);
+
     ir_builder.CreateBr(body_block);
     ir_builder.SetInsertPoint(body_block);
     statement->codegen();
@@ -366,6 +376,40 @@ void goto_stmt::codegen() {
                                              sym_table.get_curr_func());
   sym_table.top_func_scope()->add_goto_inst(identifier, &ir_builder,
                                             next_block);
+}
+
+std::vector<llvm::BasicBlock *> continue_stmt::dest_blocks;
+
+void continue_stmt::dump_tree() { cout << "- (continue)" << endl; }
+
+void continue_stmt::codegen() {
+  if (dest_blocks.size() == 0) {
+    raise_error("continue statements are only allowed inside loop bodies!");
+  }
+
+  ir_builder.CreateBr(dest_blocks.back());
+
+  auto block = llvm::BasicBlock::Create(the_context, "continue_next",
+                                        sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(block);
+}
+
+std::vector<llvm::BasicBlock *> break_stmt::dest_blocks;
+
+void break_stmt::dump_tree() { cout << "- (break)" << endl; }
+
+void break_stmt::codegen() {
+  if (dest_blocks.size() == 0) {
+    raise_error(
+        "break statements are only allowed inside loop body or switch "
+        "statement body!");
+  }
+
+  ir_builder.CreateBr(dest_blocks.back());
+
+  auto block = llvm::BasicBlock::Create(the_context, "break_next",
+                                        sym_table.get_curr_func());
+  ir_builder.SetInsertPoint(block);
 }
 
 return_stmt::return_stmt(expr *expression) { this->expression = expression; }

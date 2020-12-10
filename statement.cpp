@@ -161,7 +161,9 @@ void if_stmt::codegen() {
   value cond_val = condition->codegen();
 
   if (auto const_cond = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
-    if (const_cond->isZeroValue() && else_stmt) {
+    if (const_cond->isZeroValue()) {
+      if (!else_stmt) return;
+
       auto s = sym_table.top_func_scope()->new_scope();
       else_stmt->codegen();
     } else {

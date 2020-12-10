@@ -58,6 +58,9 @@ class func_scope {
   bool own_builder;
   llvm::Function *func;
 
+  // alloca's are added before this no-op instruction. Remove after done.
+  llvm::Instruction *alloca_end;
+
   std::unordered_multimap<std::string, llvm::BranchInst *> pending_gotos;
   std::unordered_map<std::string, llvm::BasicBlock *> label_blocks;
 

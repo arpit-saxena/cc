@@ -75,6 +75,10 @@ func_scope::~func_scope() {
   if (!pending_gotos.empty()) {
     ast_node::raise_error("goto instructions to undefined labels present!");
   }
+
+  if (alloca_end) {
+    alloca_end->eraseFromParent();
+  }
 }
 
 llvm::Function *func_scope::get_scope_func() { return func; }
@@ -108,6 +112,7 @@ void func_scope::add_block_terminator(llvm::Instruction *ins) {
   }
 
   builder->SetInsertPoint(ins);
+  alloca_end = ins;
 }
 
 void func_scope::push_scope() { scopes.emplace_back(builder); }

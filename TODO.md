@@ -17,7 +17,7 @@ Stuff to do before submission
     - [x] If constant condition, don't branch
   - [ ] Local dead-code removal
     - [x] If const condition in if_stmt, don't generate new blocks
-    - [ ] Remove the nop instruction
+    - [x] Remove the nop instruction
     - [x] if condition is while_stmt is zero, don't generate any code
 - [ ] Invariant checking
   - [ ] all codegen functions result in a non-terminated block in ir_builder

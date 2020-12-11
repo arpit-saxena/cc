@@ -53,6 +53,7 @@ tests much faster
 - All integer types such as int, long, long long, etc. along with signed and
   unsigned specifiers
 - Implicit type casting between integer types
+- double support, with no implicit casting
 - `if` and `switch`, `while` and `do-while`
 - Use of `break` and `continue` wherever applicable
 - `goto` and `return` statements

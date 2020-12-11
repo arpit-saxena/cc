@@ -94,12 +94,12 @@ static int check_type(void);
 "0"{O}*{IS}?				{ yylval.I_CONSTANT = strdup(yytext); return I_CONSTANT; }
 {CP}?"'"([^'\\\n]|{ES})+"'"		{ yylval.I_CONSTANT = strdup(yytext); return I_CONSTANT; }
 
-{D}+{E}{FS}?				{ return F_CONSTANT; }
-{D}*"."{D}+{E}?{FS}?			{ return F_CONSTANT; }
-{D}+"."{E}?{FS}?			{ return F_CONSTANT; }
-{HP}{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}*"."{H}+{P}{FS}?			{ return F_CONSTANT; }
-{HP}{H}+"."{P}{FS}?			{ return F_CONSTANT; }
+{D}+{E}{FS}?				{ yylval.F_CONSTANT = strdup(yytext); return F_CONSTANT; }
+{D}*"."{D}+{E}?{FS}?			{ yylval.F_CONSTANT = strdup(yytext); return F_CONSTANT; }
+{D}+"."{E}?{FS}?			{ yylval.F_CONSTANT = strdup(yytext); return F_CONSTANT; }
+{HP}{H}+{P}{FS}?			{ yylval.F_CONSTANT = strdup(yytext);return F_CONSTANT; }
+{HP}{H}*"."{H}+{P}{FS}?			{ yylval.F_CONSTANT = strdup(yytext);return F_CONSTANT; }
+{HP}{H}+"."{P}{FS}?			{ yylval.F_CONSTANT = strdup(yytext); return F_CONSTANT; }
 
 ({SP}?\"([^"\\\n]|{ES})*\"{WS}*)+	{ yylval.STRING_LITERAL = strdup(yytext); return STRING_LITERAL; }
 

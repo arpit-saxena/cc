@@ -115,7 +115,7 @@ primary_expression
 
 constant
 	: I_CONSTANT {$$ = const_expr::new_int_expr($1);}		/* includes character_constant */
-	| F_CONSTANT {unimplemented();}
+	| F_CONSTANT {$$ = const_expr::new_floating_expr($1);}
 	| ENUMERATION_CONSTANT {unimplemented();}	/* after it has been defined as such */
 	;
 

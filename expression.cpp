@@ -19,7 +19,8 @@ void expr::convert_to_type(value &val, type_i rtype) {
   auto rtype_llvm = llvm::dyn_cast<llvm::IntegerType>(rtype.llvm_type);
 
   if (!ltype_llvm || !rtype_llvm) {
-    raise_error("Cannot convert non integer type!");
+    print_warning("Cannot convert non integer type!");
+    return;
   }
 
   int lbits = ltype_llvm->getBitWidth(), rbits = rtype_llvm->getBitWidth();
@@ -221,7 +222,15 @@ value cond_expr_ops::codegen() {
 
 value cond_expr_ops::codegen(value cond_val, expr *true_expr,
                              expr *false_expr) {
-  type_i res_type = get_common_type(true_expr, false_expr);
+  type_i res_type;
+  if (true_expr->get_type().llvm_type->isIntegerTy()) {
+    res_type = get_common_type(true_expr, false_expr);
+  } else {
+    assert(true_expr->get_type().llvm_type ==
+               false_expr->get_type().llvm_type &&
+           "Implicit casting is not supported for non-integral types");
+    res_type = true_expr->get_type();
+  }
 
   if (auto *const_val = llvm::dyn_cast<llvm::Constant>(cond_val.llvm_val)) {
     if (const_val->isZeroValue()) {
@@ -430,22 +439,27 @@ value binary_expr_ops::codegen() { return codegen(left_expr, op, right_expr); }
 value binary_expr_ops::codegen(expr *lhs_expr, OP op, expr *rhs_expr) {
   value lhs = lhs_expr->codegen();
 
-  value zero_val = const_expr::get_val(0, lhs.get_type().llvm_type);
-  value one_val = const_expr::get_val(1, lhs.get_type().llvm_type);
+  // No implicit casting for floats
+  if (lhs.get_type().llvm_type->isIntegerTy()) {
+    value zero_val = const_expr::get_val(0, lhs.get_type().llvm_type);
+    value one_val = const_expr::get_val(1, lhs.get_type().llvm_type);
 
-  switch (op) {
-    case AND: {
-      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
-      value_expr false_expr(zero_val);
-      binary_expr_ops rhs_expr_bool(rhs_expr, binary_expr_ops::NE, &false_expr);
-      return cond_expr_ops::codegen(lhs, &rhs_expr_bool, &false_expr);
-    }
-    case OR: {
-      lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
-      value_expr true_expr(one_val);
-      value_expr false_expr(zero_val);
-      binary_expr_ops rhs_expr_bool(rhs_expr, binary_expr_ops::NE, &false_expr);
-      return cond_expr_ops::codegen(lhs, &true_expr, rhs_expr);
+    switch (op) {
+      case AND: {
+        lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
+        value_expr false_expr(zero_val);
+        binary_expr_ops rhs_expr_bool(rhs_expr, binary_expr_ops::NE,
+                                      &false_expr);
+        return cond_expr_ops::codegen(lhs, &rhs_expr_bool, &false_expr);
+      }
+      case OR: {
+        lhs.llvm_val = ir_builder.CreateICmpNE(lhs.llvm_val, zero_val.llvm_val);
+        value_expr true_expr(one_val);
+        value_expr false_expr(zero_val);
+        binary_expr_ops rhs_expr_bool(rhs_expr, binary_expr_ops::NE,
+                                      &false_expr);
+        return cond_expr_ops::codegen(lhs, &true_expr, rhs_expr);
+      }
     }
   }
 
@@ -454,6 +468,54 @@ value binary_expr_ops::codegen(expr *lhs_expr, OP op, expr *rhs_expr) {
 }
 
 value binary_expr_ops::codegen(value lhs, OP op, value rhs) {
+  // Assume float!
+  // TODO: Integrate into the rest of the code this last minute change
+  if (!lhs.get_type().llvm_type->isIntegerTy()) {
+    value ret_val;
+
+    switch (op) {
+      case LT:
+        ret_val =
+            value(ir_builder.CreateFCmpOLT(lhs.llvm_val, rhs.llvm_val), true);
+        break;
+      case GT:
+        ret_val =
+            value(ir_builder.CreateFCmpOGT(lhs.llvm_val, rhs.llvm_val), true);
+        break;
+      case LE:
+        ret_val =
+            value(ir_builder.CreateFCmpOLE(lhs.llvm_val, rhs.llvm_val), true);
+        break;
+      case GE:
+        ret_val =
+            value(ir_builder.CreateFCmpOGE(lhs.llvm_val, rhs.llvm_val), true);
+        break;
+      case EQ:
+        ret_val =
+            value(ir_builder.CreateFCmpOEQ(lhs.llvm_val, rhs.llvm_val), true);
+        break;
+      case NE:
+        ret_val =
+            value(ir_builder.CreateFCmpONE(lhs.llvm_val, rhs.llvm_val), true);
+        break;
+      case MULT:
+        return value(ir_builder.CreateFMul(lhs.llvm_val, rhs.llvm_val), true);
+      case DIV:
+        return value(ir_builder.CreateFDiv(lhs.llvm_val, rhs.llvm_val), true);
+      case PLUS:
+        return value(ir_builder.CreateFAdd(lhs.llvm_val, rhs.llvm_val), true);
+      case MINUS:
+        return value(ir_builder.CreateFSub(lhs.llvm_val, rhs.llvm_val), true);
+    }
+
+    if (ret_val.llvm_val) {  // => It was set in switch
+      ret_val.llvm_val = ir_builder.CreateZExtOrBitCast(
+          ret_val.llvm_val, ir_builder.getInt32Ty());
+      return ret_val;
+    }
+    raise_error("Unsupported operation on floats");
+  }
+
   gen_common_type(lhs, rhs);
   value ret_val;
   ret_val.is_signed = lhs.is_signed && rhs.is_signed;
@@ -910,6 +972,18 @@ const_expr *const_expr::new_int_expr(const char *s) {
   return new const_expr(
       llvm::ConstantInt::get(type.get_type().llvm_type, int_val), !is_unsigned,
       str);
+}
+
+// This is a last minute addition, so doesn't support anything other than that
+// supported by std::stod
+const_expr *const_expr::new_floating_expr(const char *s) {
+  std::string str(s);
+  free((void *)s);
+
+  // Always make a double
+  double val = std::stod(str);
+  type_i type = type_specifiers(type_specifiers::DOUBLE).get_type();
+  return new const_expr(llvm::ConstantFP::get(type.llvm_type, val), true, str);
 }
 
 value const_expr::get_val(int num) {

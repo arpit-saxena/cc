@@ -258,6 +258,8 @@ class const_expr : public primary_expr {
   const_expr(llvm::Constant *data, bool is_signed, std::string str);
   // includes character literals
   static const_expr *new_int_expr(const char *str);
+  static const_expr *new_floating_expr(
+      const char *str);  // Only very simple strings supported
   static value get_val(int num);
   static value get_val(int num, type_i type);
   static value get_val(int num, llvm::Type *type);

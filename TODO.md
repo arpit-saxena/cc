@@ -1,7 +1,5 @@
 # TODO list
 
-Stuff to do before submission
-
 - [x] Fix symbol table semantics
 - [x] Add function call codegen
 - [x] Add declaration codegen

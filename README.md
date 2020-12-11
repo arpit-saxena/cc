@@ -76,6 +76,12 @@ labeled statement, the entire body is always generated. This can be improved in
 with better bookkeeping by seeing which labels are jumped into, etc. Note that a
 similar issue also occurs with having a constant condition in the `if` statement.
 
+## Code formatting
+
+All code has been formatted through `clang-format` using the `google` style.
+Settings for it are present in the `.vscode` folder included, which formats the
+file on save when using Visual Studio Code.
+
 ## All supported constructs
 
 Different C constructs' implementation has been put in different files, listed
